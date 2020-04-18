@@ -35,11 +35,6 @@ namespace Server.Items
 
             int count = 0;
 
-            if (!Siege.SiegeShard)
-            {
-                count += MoonGen(PMList.Trammel);
-            }
-
             count += MoonGen(PMList.Felucca);
             count += MoonGen(PMList.Ilshenar);
             count += MoonGen(PMList.Malas);
@@ -375,12 +370,11 @@ namespace Server.Items
 				new PMEntry(new Point3D(719, 1863, 40), 1156262) // Valley of Eodon
             });
 
-        public static readonly PMList[] Lists = { Trammel, Felucca, Ilshenar, Malas, Tokuno, TerMur };
-        public static readonly PMList[] ListsYoung = { Trammel, Ilshenar, Malas, Tokuno, TerMur };
+        public static readonly PMList[] Lists = { Felucca, Ilshenar, Malas, Tokuno, TerMur };
+        public static readonly PMList[] ListsYoung = { Ilshenar, Malas, Tokuno, TerMur };
         public static readonly PMList[] RedLists = { Felucca };
         public static readonly PMList[] SigilLists = { Felucca };
-
-        public static readonly PMList[] AllLists = { Trammel, Felucca, Ilshenar, Malas, Tokuno, TerMur };
+        public static readonly PMList[] AllLists = { Felucca, Ilshenar, Malas, Tokuno, TerMur };
 
         public static PMList GetList(Map map)
         {
