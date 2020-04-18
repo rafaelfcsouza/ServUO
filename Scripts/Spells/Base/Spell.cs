@@ -664,7 +664,7 @@ namespace Server.Spells
         }
 
         public virtual bool BlockedByAnimalForm => true;
-        public virtual bool BlocksMovement => true;
+        public virtual bool BlocksMovement => false;
 
         public virtual bool CheckNextSpellTime => !(m_Scroll is BaseWand);
 
