@@ -2134,13 +2134,20 @@ namespace Server.Mobiles
         }
 
         private bool m_LastProtectedMessage;
+        private bool m_LastSafeMessage;
         private int m_NextProtectionCheck = 10;
 
         public virtual void RecheckTownProtection()
         {
             m_NextProtectionCheck = 10;
 
-            GuardedRegion reg = (GuardedRegion)Region.GetRegion(typeof(GuardedRegion));
+            if (!CheckGuarded()) CheckSafe();
+            
+        }
+
+        private bool CheckGuarded() 
+        {
+            GuardedRegion reg = (GuardedRegion) Region.GetRegion(typeof(GuardedRegion));
             bool isProtected = (reg != null && !reg.IsDisabled());
 
             if (isProtected != m_LastProtectedMessage)
@@ -2155,6 +2162,28 @@ namespace Server.Mobiles
                 }
 
                 m_LastProtectedMessage = isProtected;
+            }
+
+            return reg != null;
+        }
+
+        private void CheckSafe() 
+        {
+            SafeArea reg = (SafeArea) Region.GetRegion(typeof(SafeArea));
+            bool isSafe = (reg != null);
+
+            if (isSafe != m_LastSafeMessage)
+            {
+                if (isSafe)
+                {
+                    SendMessage("You feel completly safe."); // You are now under the protection of the town guards.
+                }
+                else
+                {
+                    SendMessage("You don't feel safe anymore."); /// You have left the protection of the town guards.
+                }
+
+                m_LastSafeMessage = isSafe;
             }
         }
 
