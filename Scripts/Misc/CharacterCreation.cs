@@ -27,6 +27,15 @@ namespace Server.Misc
             20,
             Map.Felucca);
 
+        private static readonly CityInfo m_TrinsicInfo = new CityInfo(
+            "Trinsic", 
+            "The Traveler's Inn",
+            1075076, 
+            1845,  
+            2745,   
+            0, 
+            Map.Felucca);
+
         private static Mobile m_Mobile;
 
         public static void Initialize()
@@ -264,10 +273,9 @@ namespace Server.Misc
                 newChar.BankBox.DropItem(ticket);
             }
 
-            CityInfo city = args.City;
-            Map map = Siege.SiegeShard && city.Map == Map.Trammel ? Map.Felucca : city.Map;
+            CityInfo city = m_TrinsicInfo;
 
-            newChar.MoveToWorld(city.Location, map);
+            newChar.MoveToWorld(city.Location, city.Map);
 
             Utility.PushColor(ConsoleColor.Green);
             Console.WriteLine("Login: {0}: New character being created (account={1})", state, args.Account.Username);
