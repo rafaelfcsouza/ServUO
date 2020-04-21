@@ -8,6 +8,7 @@ namespace Server.Engines.Quests
     {
         protected readonly List<SBInfo> m_SBInfos = new List<SBInfo>();
         private DateTime m_Spoken;
+        private DateTime m_Alerted;
         public MondainQuester()
             : base(null)
         {
@@ -129,10 +130,20 @@ namespace Server.Engines.Quests
 
                 if (InLOS(m) && range >= 0 && InRange(m, range) && !InRange(oldLocation, range) && DateTime.UtcNow >= m_Spoken + SpeakDelay)
                 {
-                    if (Utility.Random(100) < 50)
-                        Advertise();
+                    Advertise();
 
                     m_Spoken = DateTime.UtcNow;
+                }
+                
+                if (InLOS(m) && range >= 0 && InRange(m, range) && DateTime.UtcNow >= m_Alerted + TimeSpan.FromSeconds(7))
+                {
+                    BaseQuest questt = QuestHelper.RandomQuest(pm, Quests, this);
+                    if (questt != null)
+                    {
+                        Emote("*!*", Utility.RandomYellowHue()); 
+                    }
+
+                    m_Alerted = DateTime.UtcNow;
                 }
             }
         }
@@ -172,6 +183,7 @@ namespace Server.Engines.Quests
             int version = reader.ReadInt();
 
             m_Spoken = DateTime.UtcNow;
+            m_Alerted = DateTime.UtcNow;
 
             if (CantWalk)
                 Frozen = true;

@@ -18,6 +18,8 @@ namespace Server.Engines.Quests.Hag
         }
 
         public override bool ClickTitle => true;
+
+        protected override System.Type[] Quests => new System.Type[] { typeof(WitchApprenticeQuest) };
         public override void InitBody()
         {
             InitStats(100, 100, 25);

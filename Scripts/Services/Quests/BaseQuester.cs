@@ -1,6 +1,7 @@
 using Server.ContextMenus;
 using Server.Items;
 using Server.Mobiles;
+using System;
 using System.Collections.Generic;
 
 namespace Server.Engines.Quests
@@ -26,6 +27,8 @@ namespace Server.Engines.Quests
     public abstract class BaseQuester : BaseVendor
     {
         protected List<SBInfo> m_SBInfos = new List<SBInfo>();
+        private DateTime m_Alerted;
+        protected virtual Type[] Quests => Array.Empty<Type>();
         public BaseQuester()
             : this(null)
         {
@@ -52,6 +55,7 @@ namespace Server.Engines.Quests
         public override bool ClickTitle => false;
         public override bool CanTeach => false;
         public virtual int TalkNumber => 6146;// Talk
+        public virtual int AutoSpeakRange => 10;
         protected override List<SBInfo> SBInfos => m_SBInfos;
         public static Container GetNewContainer()
         {
@@ -99,6 +103,26 @@ namespace Server.Engines.Quests
 
                 if (m.Alive && range >= 0 && InRange(m, range) && !InRange(oldLocation, range) && CanTalkTo(pm))
                     OnTalk(pm, false);
+                
+                EmoteIfCanGiveQuest(pm);
+                
+            }
+        }
+
+        private void EmoteIfCanGiveQuest(PlayerMobile player)
+        {
+            if (InLOS(player) && AutoSpeakRange >= 0 && InRange(player, AutoSpeakRange) && DateTime.UtcNow >= m_Alerted + TimeSpan.FromSeconds(7))
+            {
+                foreach (Type quest in Quests) 
+                {
+                    if (QuestSystem.CanOfferQuest(player, quest))
+                    {
+                        Emote("*!*", Utility.RandomYellowHue()); 
+                    }
+
+                    m_Alerted = DateTime.UtcNow;
+                    return;
+                }
             }
         }
 
@@ -117,6 +141,8 @@ namespace Server.Engines.Quests
         public override void Deserialize(GenericReader reader)
         {
             base.Deserialize(reader);
+
+            m_Alerted = DateTime.UtcNow;
 
             int version = reader.ReadInt();
         }

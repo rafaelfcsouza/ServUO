@@ -17,6 +17,8 @@ namespace Server.Engines.Quests.Naturalist
         {
         }
 
+        protected override System.Type[] Quests => new System.Type[] { typeof(StudyOfSolenQuest) };
+
         public override void InitBody()
         {
             InitStats(100, 100, 25);

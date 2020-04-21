@@ -7096,6 +7096,11 @@ namespace Server
             PublicOverheadMessage(MessageType.Emote, m_EmoteHue, false, text);
         }
 
+        public void Emote(string text, int emoteHue)
+        {
+            PublicOverheadMessage(MessageType.Emote, emoteHue, false, text);
+        }
+
         public void Emote(string format, params object[] args)
         {
             Emote(String.Format(format, args));

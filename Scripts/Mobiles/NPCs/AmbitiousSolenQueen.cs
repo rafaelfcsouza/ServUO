@@ -15,6 +15,7 @@ namespace Server.Engines.Quests.Ambitious
         }
 
         public abstract bool RedSolen { get; }
+        protected override System.Type[] Quests => new System.Type[] { typeof(AmbitiousQueenQuest) };
         public override bool DisallowAllMoves => false;
         public override void InitBody()
         {

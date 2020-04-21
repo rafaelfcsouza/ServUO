@@ -16,6 +16,8 @@ namespace Server.Engines.Quests.Collector
         {
         }
 
+        protected override System.Type[] Quests => new System.Type[] { typeof(CollectorQuest) };
+
         public override void InitBody()
         {
             InitStats(100, 100, 25);

@@ -26,6 +26,8 @@ namespace Server.Engines.Quests.Matriarch
         {
         }
 
+        protected override System.Type[] Quests => new System.Type[] { typeof(SolenMatriarchQuest) };
+
         public override void CheckMorph()
         {
         }

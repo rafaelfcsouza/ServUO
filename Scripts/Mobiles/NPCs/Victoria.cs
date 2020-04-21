@@ -1,5 +1,6 @@
 using Server.Items;
 using Server.Mobiles;
+using System;
 
 namespace Server.Engines.Quests.Doom
 {
@@ -22,6 +23,7 @@ namespace Server.Engines.Quests.Doom
         public override bool ClickTitle => true;
         public override bool IsActiveVendor => true;
         public override bool DisallowAllMoves => false;
+        protected override Type[] Quests => new Type[] { typeof(Doom.TheSummoningQuest) };
         public SummoningAltar Altar
         {
             get

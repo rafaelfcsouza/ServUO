@@ -15,6 +15,8 @@ namespace Server.Engines.Quests.Zento
         {
         }
 
+        protected override System.Type[] Quests => new System.Type[] { typeof(TerribleHatchlingsQuest) };
+
         public override void InitBody()
         {
             InitStats(100, 100, 25);

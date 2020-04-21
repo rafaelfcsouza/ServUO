@@ -42,3 +42,6 @@
 
 !/Data/*
 !/bin/rosyln/*
+.DS_Store
+*.swp
+*.bak
