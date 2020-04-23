@@ -2866,6 +2866,17 @@ namespace Server
 
         public static int MaxLOSDistance { get { return m_MaxLOSDistance; } set { m_MaxLOSDistance = value; } }
 
+        public bool InRange(object from, object dest, int range)
+        {
+            Point3D pointFrom = GetPoint(from, false);
+            Point3D pointDest = GetPoint(dest, false);
+
+            return (pointFrom.m_X >= (pointDest.m_X - range))
+                && (pointFrom.m_X <= (pointDest.m_X + range))
+                && (pointFrom.m_Y >= (pointDest.m_Y - range))
+                && (pointFrom.m_Y <= (pointDest.m_Y + range));
+        }
+
         public bool LineOfSight(Point3D org, Point3D dest)
         {
             if (this == Internal)

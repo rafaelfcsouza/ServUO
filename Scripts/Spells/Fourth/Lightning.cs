@@ -18,15 +18,21 @@ namespace Server.Spells.Fourth
 
         public override SpellCircle Circle => SpellCircle.Fourth;
         public override bool DelayedDamage => false;
+
         public override void OnCast()
         {
-            Caster.Target = new InternalTarget(this);
+            if (PreTarget != null)
+            {
+                Target((IDamageable)PreTarget);
+            }
+            else
+            {
+                Caster.Target = new InternalTarget(this);
+            }
         }
 
         public void Target(IDamageable m)
         {
-            Mobile mob = m as Mobile;
-
             if (!Caster.CanSee(m))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -70,12 +76,18 @@ namespace Server.Spells.Fourth
             protected override void OnTarget(Mobile from, object o)
             {
                 if (o is IDamageable)
-                    m_Owner.Target((IDamageable)o);
+                {
+                    if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
+                    else m_Owner.Target((IDamageable) o);
+                }
             }
 
             protected override void OnTargetFinish(Mobile from)
             {
-                m_Owner.FinishSequence();
+                if (!(m_Owner.Caster is PlayerMobile))
+                {
+                    m_Owner.FinishSequence();
+                }
             }
         }
     }

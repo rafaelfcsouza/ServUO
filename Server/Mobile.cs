@@ -12005,6 +12005,25 @@ namespace Server
         #endregion
 
         #region InRange
+        public bool InRange(object target, int range)
+        {
+            if (m_Deleted || m_Map == null)
+            {
+                return false;
+            }
+
+            if (target == this || m_AccessLevel > AccessLevel.Player)
+            {
+                return true;
+            }
+
+            if (target is Item && ((Item)target).RootParent == this)
+            {
+                return true;
+            }
+
+            return m_Map.InRange(this, target, range);
+        }
         public bool InRange(Point2D p, int range)
         {
             return (p.m_X >= (m_Location.m_X - range)) && (p.m_X <= (m_Location.m_X + range)) &&

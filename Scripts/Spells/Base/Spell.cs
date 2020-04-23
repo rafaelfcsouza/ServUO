@@ -382,6 +382,11 @@ namespace Server.Spells
 
         public virtual bool ConsumeReagents()
         {
+            if (Caster is PlayerMobile && m_Caster.AccessLevel > AccessLevel.Player)
+            {
+                return true;
+            }
+
             if ((m_Scroll != null && !(m_Scroll is SpellStone)) || !m_Caster.Player)
             {
                 return true;
@@ -565,8 +570,7 @@ namespace Server.Spells
             }
 
             if (m_State == SpellState.Casting)
-            {
-                m_State = SpellState.None;
+            {                m_State = SpellState.None;
                 m_Caster.Spell = null;
                 Caster.Delta(MobileDelta.Flags);
 
@@ -590,8 +594,7 @@ namespace Server.Spells
                 m_Caster.NextSpellTime = Core.TickCount + (int)GetDisturbRecovery().TotalMilliseconds;
             }
             else if (m_State == SpellState.Sequencing)
-            {
-                m_State = SpellState.None;
+            {                m_State = SpellState.None;
                 m_Caster.Spell = null;
                 Caster.Delta(MobileDelta.Flags);
 
@@ -668,15 +671,26 @@ namespace Server.Spells
 
         public virtual bool CheckNextSpellTime => !(m_Scroll is BaseWand);
 
+        protected object PreTarget { get; private set; }
+
         public virtual bool Cast()
         {
-            m_StartCastTime = Core.TickCount;
-
-            if (m_Caster.Spell is Spell && ((Spell)m_Caster.Spell).State == SpellState.Sequencing)
+            if (!IsCastPossible())
             {
-                ((Spell)m_Caster.Spell).Disturb(DisturbType.NewCast);
+                return false;
             }
 
+            if (Caster is PlayerMobile)
+            {
+                OnCast();
+                return true;
+            }
+
+            return Invoke();
+        }
+
+        private bool IsCastPossible()
+        {
             if (!m_Caster.CheckAlive())
             {
                 return false;
@@ -710,104 +724,113 @@ namespace Server.Spells
             {
                 m_Caster.SendLocalizedMessage(1072060); // You cannot cast a spell while calmed.
             }
-            else if (m_Caster.Mana >= ScaleMana(GetMana()))
-            {
-                #region Stygian Abyss
-                if (m_Caster.Race == Race.Gargoyle && m_Caster.Flying)
-                {
-                    if (BaseMount.OnFlightPath(m_Caster))
-                    {
-                        if (m_Caster.IsPlayer())
-                        {
-                            m_Caster.SendLocalizedMessage(1113750); // You may not cast spells while flying over such precarious terrain.
-                            return false;
-                        }
-                        else
-                        {
-                            m_Caster.SendMessage("Your staff level allows you to cast while flying over precarious terrain.");
-                        }
-                    }
-                }
-                #endregion
-
-                if (m_Caster.Spell == null && m_Caster.CheckSpellCast(this) && CheckCast() &&
-                    m_Caster.Region.OnBeginSpellCast(m_Caster, this))
-                {
-                    m_State = SpellState.Casting;
-                    m_Caster.Spell = this;
-
-                    Caster.Delta(MobileDelta.Flags);
-
-                    if (!(m_Scroll is BaseWand) && RevealOnCast)
-                    {
-                        m_Caster.RevealingAction();
-                    }
-
-                    SayMantra();
-
-                    /*
-                     * EA seems to use some type of spell variation, of -100 ms + timer resolution.
-                     * Using the below millisecond dropoff with a 50ms timer resolution seems to be exact
-                     * to EA.
-                     */
-
-                    TimeSpan castDelay = GetCastDelay().Subtract(TimeSpan.FromMilliseconds(100));
-
-                    if (ShowHandMovement && !(m_Scroll is SpellStone) && (m_Caster.Body.IsHuman || (m_Caster.Player && m_Caster.Body.IsMonster)))
-                    {
-                        int count = (int)Math.Ceiling(castDelay.TotalSeconds / AnimateDelay.TotalSeconds);
-
-                        if (count != 0)
-                        {
-                            m_AnimTimer = new AnimTimer(this, count);
-                            m_AnimTimer.Start();
-                        }
-
-                        if (m_Info.LeftHandEffect > 0)
-                        {
-                            Caster.FixedParticles(0, 10, 5, m_Info.LeftHandEffect, EffectLayer.LeftHand);
-                        }
-
-                        if (m_Info.RightHandEffect > 0)
-                        {
-                            Caster.FixedParticles(0, 10, 5, m_Info.RightHandEffect, EffectLayer.RightHand);
-                        }
-                    }
-
-                    if (ClearHandsOnCast)
-                    {
-                        m_Caster.ClearHands();
-                    }
-
-                    WeaponAbility.ClearCurrentAbility(m_Caster);
-
-                    m_CastTimer = new CastTimer(this, castDelay);
-                    //m_CastTimer.Start();
-
-                    OnBeginCast();
-
-                    if (castDelay > TimeSpan.Zero)
-                    {
-                        m_CastTimer.Start();
-                    }
-                    else
-                    {
-                        m_CastTimer.Tick();
-                    }
-
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            else
+            else if (m_Caster.Mana < ScaleMana(GetMana()))
             {
                 m_Caster.LocalOverheadMessage(MessageType.Regular, 0x22, 502625, ScaleMana(GetMana()).ToString()); // Insufficient mana. You must have at least ~1_MANA_REQUIREMENT~ Mana to use this spell.
             }
+            else if (m_Caster.Race == Race.Gargoyle && m_Caster.Flying)
+            {
+                if (BaseMount.OnFlightPath(m_Caster))
+                {
+                    if (m_Caster.IsPlayer())
+                    {
+                        m_Caster.SendLocalizedMessage(1113750); // You may not cast spells while flying over such precarious terrain.
+                        return false;
+                    }
+                    else
+                    {
+                        m_Caster.SendMessage("Your staff level allows you to cast while flying over precarious terrain.");
+                    }
+                }
+            }
+
+            if (m_Caster.Spell == null && m_Caster.CheckSpellCast(this) && CheckCast() &&
+                    m_Caster.Region.OnBeginSpellCast(m_Caster, this))
+            {
+                return true;
+            }
 
             return false;
+        }
+
+        public virtual void Invoke(object target)
+        {
+            PreTarget = target;
+            Invoke();
+        }
+
+        public virtual bool Invoke()
+        {
+            m_StartCastTime = Core.TickCount;
+
+            if (m_Caster.Spell is Spell && ((Spell)m_Caster.Spell).State == SpellState.Sequencing)
+            {
+                ((Spell)m_Caster.Spell).Disturb(DisturbType.NewCast);
+            }
+
+            m_State = SpellState.Casting;
+            m_Caster.Spell = this;
+
+            Caster.Delta(MobileDelta.Flags);
+
+            if (!(m_Scroll is BaseWand) && RevealOnCast)
+            {
+                m_Caster.RevealingAction();
+            }
+
+            SayMantra();
+
+            /*
+                * EA seems to use some type of spell variation, of -100 ms + timer resolution.
+                * Using the below millisecond dropoff with a 50ms timer resolution seems to be exact
+                * to EA.
+                */
+
+            TimeSpan castDelay = GetCastDelay().Subtract(TimeSpan.FromMilliseconds(100));
+
+            if (ShowHandMovement && !(m_Scroll is SpellStone) && (m_Caster.Body.IsHuman || (m_Caster.Player && m_Caster.Body.IsMonster)))
+            {
+                int count = (int)Math.Ceiling(castDelay.TotalSeconds / AnimateDelay.TotalSeconds);
+
+                if (count != 0)
+                {
+                    m_AnimTimer = new AnimTimer(this, count);
+                    m_AnimTimer.Start();
+                }
+
+                if (m_Info.LeftHandEffect > 0)
+                {
+                    Caster.FixedParticles(0, 10, 5, m_Info.LeftHandEffect, EffectLayer.LeftHand);
+                }
+
+                if (m_Info.RightHandEffect > 0)
+                {
+                    Caster.FixedParticles(0, 10, 5, m_Info.RightHandEffect, EffectLayer.RightHand);
+                }
+            }
+
+            if (ClearHandsOnCast)
+            {
+                m_Caster.ClearHands();
+            }
+
+            WeaponAbility.ClearCurrentAbility(m_Caster);
+
+            m_CastTimer = new CastTimer(this, castDelay);
+            //m_CastTimer.Start();
+
+            OnBeginCast();
+
+            if (castDelay > TimeSpan.Zero)
+            {
+                m_CastTimer.Start();
+            }
+            else
+            {
+                m_CastTimer.Tick();
+            }
+
+            return true;
         }
 
         public abstract void OnCast();
@@ -1039,6 +1062,13 @@ namespace Server.Spells
 
             if (m_Caster.Deleted || !m_Caster.Alive || m_Caster.Spell != this || m_State != SpellState.Sequencing)
             {
+                DoFizzle();
+            }
+            else if (PreTarget != null
+                && PreTarget != m_Caster
+                && (!m_Caster.CanSee(PreTarget) || !m_Caster.InLOS(PreTarget) || !m_Caster.InRange(PreTarget, 15)))
+            {
+                m_Caster.SendLocalizedMessage(500237); // Target can not be seen.
                 DoFizzle();
             }
             else if (m_Scroll != null && !(m_Scroll is Runebook) &&
