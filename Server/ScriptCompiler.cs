@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.CSharp;
 #endregion
 
 namespace Server
