@@ -2164,7 +2164,7 @@ namespace Server.Mobiles
             bool isSafe = (reg != null);
 
             if (isSafe == m_LastSafeMessage) return;
-            SendMessage(isSafe ? "You feel completly safe." : "You don't feel safe anymore.");
+            SendMessage(isSafe ? "You feel completely safe." : "You don't feel safe anymore.");
 
             m_LastSafeMessage = isSafe;
         }
