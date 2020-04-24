@@ -2142,49 +2142,31 @@ namespace Server.Mobiles
             m_NextProtectionCheck = 10;
 
             if (!CheckGuarded()) CheckSafe();
-            
+
         }
 
-        private bool CheckGuarded() 
+        private bool CheckGuarded()
         {
             GuardedRegion reg = (GuardedRegion) Region.GetRegion(typeof(GuardedRegion));
             bool isProtected = (reg != null && !reg.IsDisabled());
 
-            if (isProtected != m_LastProtectedMessage)
-            {
-                if (isProtected)
-                {
-                    SendLocalizedMessage(500112); // You are now under the protection of the town guards.
-                }
-                else
-                {
-                    SendLocalizedMessage(500113); // You have left the protection of the town guards.
-                }
+            if (isProtected == m_LastProtectedMessage) return reg != null;
+            SendLocalizedMessage(isProtected ? 500112 : 500113);
 
-                m_LastProtectedMessage = isProtected;
-            }
+            m_LastProtectedMessage = isProtected;
 
             return reg != null;
         }
 
-        private void CheckSafe() 
+        private void CheckSafe()
         {
             SafeArea reg = (SafeArea) Region.GetRegion(typeof(SafeArea));
             bool isSafe = (reg != null);
 
-            if (isSafe != m_LastSafeMessage)
-            {
-                if (isSafe)
-                {
-                    SendMessage("You feel completly safe."); // You are now under the protection of the town guards.
-                }
-                else
-                {
-                    SendMessage("You don't feel safe anymore."); /// You have left the protection of the town guards.
-                }
+            if (isSafe == m_LastSafeMessage) return;
+            SendMessage(isSafe ? "You feel completly safe." : "You don't feel safe anymore.");
 
-                m_LastSafeMessage = isSafe;
-            }
+            m_LastSafeMessage = isSafe;
         }
 
         public override void MoveToWorld(Point3D loc, Map map)
@@ -2279,7 +2261,7 @@ namespace Server.Mobiles
                     }
                 }
 
-                list.Add(new CallbackEntry(RefuseTrades ? 1154112 : 1154113, ToggleTrades)); // Allow Trades / Refuse Trades				
+                list.Add(new CallbackEntry(RefuseTrades ? 1154112 : 1154113, ToggleTrades)); // Allow Trades / Refuse Trades
 
                 if (m_JusticeProtectors.Count > 0)
                 {
@@ -3137,7 +3119,7 @@ namespace Server.Mobiles
                 }
                 else if (to.Backpack == null || !to.Backpack.CheckHold(to, item, false, checkItems, plusItems, plusWeight))
                 {
-                    msgNum = 1004039; // The recipient of this trade would not be able to carry 
+                    msgNum = 1004039; // The recipient of this trade would not be able to carry
                 }
                 else
                 {

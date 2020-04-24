@@ -1,4 +1,10 @@
+#region References
+using Server.Commands;
+using Server.Mobiles;
+using System;
+using System.Collections.Generic;
 using System.Xml;
+#endregion
 
 namespace Server.Regions
 {
