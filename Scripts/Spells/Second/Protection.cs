@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using Server.Mobiles;
+using Server.Targeting;
 
 namespace Server.Spells.Second
 {
@@ -95,10 +97,25 @@ namespace Server.Spells.Second
 
         public override void OnCast()
         {
-            if (CheckSequence())
-                Toggle(Caster, Caster, false);
+            if (Caster is PlayerMobile)
+            {
+                if (PreTarget != null)
+                {
+                    if (CheckSequence())
+                        Toggle(Caster, (Mobile) PreTarget, false);
 
-            FinishSequence();
+                    FinishSequence();
+                }
+                else Caster.Target = new InternalTarget(this);
+            }
+            else
+            {
+                if (CheckSequence())
+                    Toggle(Caster, Caster, false);
+
+                FinishSequence();
+            }
+
         }
 
         #region SA
@@ -129,6 +146,31 @@ namespace Server.Spells.Second
             {
                 ProtectionSpell.Registry.Remove(m_Caster);
                 DefensiveSpell.Nullify(m_Caster);
+            }
+        }
+
+        private class InternalTarget : Target
+        {
+            private readonly ProtectionSpell m_Owner;
+
+            public InternalTarget(ProtectionSpell owner)
+                : base(10, false, TargetFlags.Beneficial)
+            {
+                m_Owner = owner;
+            }
+
+            protected override void OnTarget(Mobile from, object o)
+            {
+                if (!(o is Mobile)) return;
+                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
+            }
+
+            protected override void OnTargetFinish(Mobile from)
+            {
+                if (!(m_Owner.Caster is PlayerMobile))
+                {
+                    m_Owner.FinishSequence();
+                }
             }
         }
     }

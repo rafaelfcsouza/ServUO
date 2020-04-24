@@ -1,4 +1,5 @@
 using Server.Items;
+using Server.Mobiles;
 using Server.Targeting;
 
 namespace Server.Spells.Second
@@ -19,7 +20,8 @@ namespace Server.Spells.Second
         public override SpellCircle Circle => SpellCircle.Second;
         public override void OnCast()
         {
-            Caster.Target = new InternalTarget(this);
+            if (PreTarget != null) Target((TrapableContainer)PreTarget);
+            else Caster.Target = new InternalTarget(this);
         }
 
         public void Target(TrapableContainer item)
@@ -60,19 +62,22 @@ namespace Server.Spells.Second
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (o is TrapableContainer)
-                {
-                    m_Owner.Target((TrapableContainer)o);
-                }
-                else
+                if (!(o is TrapableContainer))
                 {
                     from.SendLocalizedMessage(501856); // That isn't trapped.
+                    return;
                 }
+
+                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
+                else m_Owner.Target((TrapableContainer) o);
             }
 
             protected override void OnTargetFinish(Mobile from)
             {
-                m_Owner.FinishSequence();
+                if (!(m_Owner.Caster is PlayerMobile))
+                {
+                    m_Owner.FinishSequence();
+                }
             }
         }
     }

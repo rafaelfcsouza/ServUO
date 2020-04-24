@@ -1,3 +1,4 @@
+using Server.Mobiles;
 using Server.Targeting;
 
 namespace Server.Spells.Second
@@ -19,7 +20,8 @@ namespace Server.Spells.Second
         public override bool DelayedDamage => false;
         public override void OnCast()
         {
-            Caster.Target = new InternalTarget(this);
+            if (PreTarget != null) Target((IDamageable)PreTarget);
+            else Caster.Target = new InternalTarget(this);
         }
 
         public override double GetSlayerDamageScalar(Mobile target)
@@ -80,15 +82,17 @@ namespace Server.Spells.Second
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (o is IDamageable)
-                {
-                    m_Owner.Target((IDamageable)o);
-                }
+                if (!(o is IDamageable)) return;
+                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
+                else m_Owner.Target((IDamageable) o);
             }
 
             protected override void OnTargetFinish(Mobile from)
             {
-                m_Owner.FinishSequence();
+                if (!(m_Owner.Caster is PlayerMobile))
+                {
+                    m_Owner.FinishSequence();
+                }
             }
         }
     }
