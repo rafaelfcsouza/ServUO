@@ -1,4 +1,6 @@
 #region References
+
+using Server.Spells;
 using Server.Spells.First;
 using Server.Spells.Fourth;
 using Server.Spells.Second;
@@ -40,7 +42,7 @@ namespace Server.Mobiles
                 {
                     ProcessTarget(targ, m_AGHeal);
                 }
-                else if (targ is HealSpell.InternalTarget)
+                else if (targ is SpellTarget<HealSpell, Mobile>)
                 {
                     ProcessTarget(targ, m_ALHeal);
                 }

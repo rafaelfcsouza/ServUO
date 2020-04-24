@@ -35,11 +35,11 @@ namespace Server.Spells.First
 
         public override void OnCast()
         {
-            if (PreTarget != null) Target();
+            if (PreTarget != null) Target(Caster);
             else Invoke(Caster);
         }
 
-        public void Target()
+        public override void Target(object a)
         {
             if (CheckSequence())
             {

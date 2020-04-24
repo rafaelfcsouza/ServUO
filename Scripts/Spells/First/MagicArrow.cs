@@ -20,14 +20,12 @@ namespace Server.Spells.First
         public override bool DelayedDamageStacking => false;
         public override bool DelayedDamage => true;
         public override Type[] DelayDamageFamily => new Type[] { typeof(Server.Spells.Mysticism.NetherBoltSpell) };
-        public override void OnCast()
-        {
-            if (PreTarget != null) Target((IDamageable)PreTarget);
-            else Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(IDamageable d)
+        protected override Target CreateTarget() => new SpellTarget<MagicArrowSpell, IDamageable>(this, TargetFlags.Harmful);
+
+        public override void Target(object o)
         {
+            var d = (IDamageable) o;
             if (!Caster.CanSee(d))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.

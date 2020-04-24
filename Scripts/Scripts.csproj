@@ -10860,6 +10860,7 @@
     <Compile Include="Spells\Base\SpellState.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Spells\Base\SpellTarget.cs" />
     <Compile Include="Spells\Bushido\Confidence.cs">
       <SubType>Code</SubType>
     </Compile>

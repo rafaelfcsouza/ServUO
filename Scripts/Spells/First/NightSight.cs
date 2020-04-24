@@ -27,8 +27,9 @@ namespace Server.Spells.First
             else Caster.Target = new NightSightTarget(this);
         }
 
-        public void Target(Mobile targ)
+        public override void Target(object o)
         {
+            var targ = (Mobile) o;
             SpellHelper.Turn(Caster, targ);
 
             if (targ.BeginAction(typeof(LightCycle)))

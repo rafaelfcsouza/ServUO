@@ -47,14 +47,12 @@ namespace Server.Spells.First
         }
 
         public override SpellCircle Circle => SpellCircle.First;
-        public override void OnCast()
-        {
-            if (PreTarget != null) Target((Mobile)PreTarget);
-            else Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(Mobile m)
+        protected override Target CreateTarget() => new SpellTarget<WeakenSpell, Mobile>(this, TargetFlags.Harmful);
+
+        public override void Target(object o)
         {
+            var m = (Mobile) o;
             if (!Caster.CanSee(m))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -109,31 +107,6 @@ namespace Server.Spells.First
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly WeakenSpell m_Owner;
-            public InternalTarget(WeakenSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (!(o is Mobile)) return;
-                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
-                else m_Owner.Target((Mobile) o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                if (!(m_Owner.Caster is PlayerMobile))
-                {
-                    m_Owner.FinishSequence();
-                }
-            }
         }
     }
 }

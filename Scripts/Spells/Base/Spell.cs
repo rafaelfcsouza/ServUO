@@ -573,7 +573,7 @@ namespace Server.Spells
 
                 OnDisturb(type, false);
 
-                Target.Cancel(Caster);
+                Server.Targeting.Target.Cancel(Caster);
 
                 if (Caster.Player && type == DisturbType.Hurt)
                 {
@@ -706,11 +706,13 @@ namespace Server.Spells
                    Caster.Region.OnBeginSpellCast(Caster, this);
         }
 
-        protected void Invoke(object target)
+        public void Invoke(object target)
         {
             PreTarget = target;
             Invoke();
         }
+
+        public virtual void Target(object o) { }
 
         protected bool Invoke()
         {
@@ -786,7 +788,16 @@ namespace Server.Spells
             return true;
         }
 
-        public abstract void OnCast();
+        public virtual void OnCast()
+        {
+            if (PreTarget != null) Target((Mobile) PreTarget);
+            else Caster.Target = CreateTarget();
+        }
+
+        protected virtual Target CreateTarget()
+        {
+            throw new NotImplementedException();
+        }
 
         #region Enhanced Client
         public bool OnCastInstantTarget()

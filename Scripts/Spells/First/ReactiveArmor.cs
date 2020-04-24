@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Server.Mobiles;
+using Server.Targeting;
 
 namespace Server.Spells.First
 {
@@ -13,37 +15,36 @@ namespace Server.Spells.First
             Reagent.Garlic,
             Reagent.SpidersSilk,
             Reagent.SulfurousAsh);
-        private static readonly Hashtable m_Table = new Hashtable();
+
+        private static readonly Dictionary<Mobile, ResistanceMod[]> _ResistanceTable = new Dictionary<Mobile, ResistanceMod[]>();
+        private static readonly Dictionary<Mobile, InternalTimer> _TimerTable = new Dictionary<Mobile, InternalTimer>();
         public ReactiveArmorSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
         }
 
         public override SpellCircle Circle => SpellCircle.First;
+
         public static void EndArmor(Mobile m)
         {
-            if (m_Table.Contains(m))
+            if (!_ResistanceTable.ContainsKey(m)) return;
+
+            ResistanceMod[] mods = _ResistanceTable[m];
+
+            if (mods != null)
             {
-                ResistanceMod[] mods = (ResistanceMod[])m_Table[m];
-
-                if (mods != null)
-                {
-                    for (int i = 0; i < mods.Length; ++i)
-                        m.RemoveResistanceMod(mods[i]);
-                }
-
-                m_Table.Remove(m);
-                BuffInfo.RemoveBuff(m, BuffIcon.ReactiveArmor);
+                foreach (var t in mods)
+                    m.RemoveResistanceMod(t);
             }
+
+            _ResistanceTable.Remove(m);
+            _TimerTable.Remove(m);
+            BuffInfo.RemoveBuff(m, BuffIcon.ReactiveArmor);
         }
 
-        public override void OnCast()
-        {
-            if (PreTarget != null) Target();
-            else Invoke(Caster);
-        }
+        protected override Target CreateTarget() => new SpellTarget<ReactiveArmorSpell, Mobile>(this, TargetFlags.Beneficial);
 
-        public void Target()
+        public override void Target(object o)
         {
             /* The reactive armor spell increases the caster's physical resistance, while lowering the caster's elemental resistances.
             * 15 + (Inscription/20) Physcial bonus
@@ -54,46 +55,32 @@ namespace Server.Spells.First
             */
             if (CheckSequence())
             {
-                Mobile targ = Caster;
+                Mobile targ = (Mobile) o;
 
-                ResistanceMod[] mods = (ResistanceMod[])m_Table[targ];
+                targ.PlaySound(0x1E9);
+                targ.FixedParticles(0x376A, 9, 32, 5008, EffectLayer.Waist);
 
-                if (mods == null)
+                var mods = new[]
                 {
-                    targ.PlaySound(0x1E9);
-                    targ.FixedParticles(0x376A, 9, 32, 5008, EffectLayer.Waist);
+                    new ResistanceMod(ResistanceType.Physical, 15 + (int)(targ.Skills[SkillName.Inscribe].Value / 20)),
+                    new ResistanceMod(ResistanceType.Fire, -5),
+                    new ResistanceMod(ResistanceType.Cold, -5),
+                    new ResistanceMod(ResistanceType.Poison, -5),
+                    new ResistanceMod(ResistanceType.Energy, -5)
+                };
 
-                    mods = new ResistanceMod[5]
-                    {
-                        new ResistanceMod(ResistanceType.Physical, 15 + (int)(targ.Skills[SkillName.Inscribe].Value / 20)),
-                        new ResistanceMod(ResistanceType.Fire, -5),
-                        new ResistanceMod(ResistanceType.Cold, -5),
-                        new ResistanceMod(ResistanceType.Poison, -5),
-                        new ResistanceMod(ResistanceType.Energy, -5)
-                    };
+                _ResistanceTable[targ] = mods;
 
-                    m_Table[targ] = mods;
+                foreach (var t in mods)
+                    targ.AddResistanceMod(t);
 
-                    for (int i = 0; i < mods.Length; ++i)
-                        targ.AddResistanceMod(mods[i]);
+                int physresist = 15 + (int)(targ.Skills[SkillName.Inscribe].Value / 20);
+                string args = String.Format("{0}\t{1}\t{2}\t{3}\t{4}", physresist, 5, 5, 5, 5);
 
-                    int physresist = 15 + (int)(targ.Skills[SkillName.Inscribe].Value / 20);
-                    string args = String.Format("{0}\t{1}\t{2}\t{3}\t{4}", physresist, 5, 5, 5, 5);
+                BuffInfo.AddBuff(targ, new BuffInfo(BuffIcon.ReactiveArmor, 1075812, 1075813, args.ToString()));
 
-                    BuffInfo.AddBuff(Caster, new BuffInfo(BuffIcon.ReactiveArmor, 1075812, 1075813, args.ToString()));
-                }
-                else
-                {
-                    targ.PlaySound(0x1ED);
-                    targ.FixedParticles(0x376A, 9, 32, 5008, EffectLayer.Waist);
-
-                    m_Table.Remove(targ);
-
-                    for (int i = 0; i < mods.Length; ++i)
-                        targ.RemoveResistanceMod(mods[i]);
-
-                    BuffInfo.RemoveBuff(Caster, BuffIcon.ReactiveArmor);
-                }
+                TimeSpan length = SpellHelper.GetDuration(Caster, targ);
+                _TimerTable[targ] = new InternalTimer(targ, TimeSpan.FromSeconds(10)); //length + TimeSpan.FromMilliseconds(50));
             }
 
             FinishSequence();
@@ -102,7 +89,24 @@ namespace Server.Spells.First
 
         public static bool HasArmor(Mobile m)
         {
-            return m_Table.ContainsKey(m);
+            return _TimerTable.ContainsKey(m);
+        }
+
+        private class InternalTimer : Timer
+        {
+            private Mobile Mobile { get; }
+
+            public InternalTimer(Mobile m, TimeSpan duration)
+                : base(duration)
+            {
+                Mobile = m;
+                Start();
+            }
+
+            protected override void OnTick()
+            {
+                EndArmor(Mobile);
+            }
         }
     }
 }
