@@ -22,7 +22,8 @@ namespace Server.Spells.First
 
         public override void OnCast()
         {
-            Caster.Target = new InternalTarget(this);
+            if (PreTarget != null) Target((Mobile)PreTarget);
+            else Caster.Target = new InternalTarget(this);
         }
 
         public void Target(Mobile m)
@@ -80,15 +81,17 @@ namespace Server.Spells.First
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (o is Mobile)
-                {
-                    m_Owner.Target((Mobile)o);
-                }
+                if (!(o is Mobile)) return;
+                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
+                else m_Owner.Target((Mobile) o);
             }
 
             protected override void OnTargetFinish(Mobile from)
             {
-                m_Owner.FinishSequence();
+                if (!(m_Owner.Caster is PlayerMobile))
+                {
+                    m_Owner.FinishSequence();
+                }
             }
         }
     }

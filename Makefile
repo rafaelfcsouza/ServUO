@@ -27,6 +27,7 @@ clean:
 	rm -f Ultima.dll
 	rm -f Ultima.dll.mdb
 	rm -f *.bin
+	rm -rf Scripts/obj
 
 Ultima.dll: Ultima/*.cs
 	${MCS} -target:library -out:${CURPATH}/Ultima.dll -r:${REFS} -nowarn:${NOWARNS} -d:MONO -d:ServUO -d:NEWTIMERS -nologo -optimize -unsafe -recurse:${SDKPATH}/*.cs

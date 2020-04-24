@@ -635,7 +635,7 @@ namespace Server.Spells
 
         public virtual bool CheckNextSpellTime => !(Scroll is BaseWand);
 
-        protected object PreTarget { get; private set; }
+        protected object PreTarget { get; set; }
 
         public virtual bool Cast()
         {
@@ -644,13 +644,11 @@ namespace Server.Spells
                 return false;
             }
 
-            if (Caster is PlayerMobile)
-            {
-                OnCast();
-                return true;
-            }
+            if (!(Caster is PlayerMobile)) return Invoke();
 
-            return Invoke();
+            OnCast();
+            return true;
+
         }
 
         private bool IsCastPossible()

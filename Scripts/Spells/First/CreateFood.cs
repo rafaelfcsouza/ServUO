@@ -1,5 +1,6 @@
 using Server.Items;
 using System;
+using Server.Mobiles;
 
 namespace Server.Spells.First
 {
@@ -31,7 +32,14 @@ namespace Server.Spells.First
         }
 
         public override SpellCircle Circle => SpellCircle.First;
+
         public override void OnCast()
+        {
+            if (PreTarget != null) Target();
+            else Invoke(Caster);
+        }
+
+        public void Target()
         {
             if (CheckSequence())
             {

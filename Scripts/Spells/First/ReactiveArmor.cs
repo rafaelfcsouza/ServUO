@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Server.Mobiles;
 
 namespace Server.Spells.First
 {
@@ -38,11 +39,17 @@ namespace Server.Spells.First
 
         public override void OnCast()
         {
+            if (PreTarget != null) Target();
+            else Invoke(Caster);
+        }
+
+        public void Target()
+        {
             /* The reactive armor spell increases the caster's physical resistance, while lowering the caster's elemental resistances.
             * 15 + (Inscription/20) Physcial bonus
             * -5 Elemental
-            * The reactive armor spell has an indefinite duration, becoming active when cast, and deactivated when re-cast. 
-            * Reactive Armor, Protection, and Magic Reflection will stay on—even after logging out, even after dying—until you “turn them off” by casting them again. 
+            * The reactive armor spell has an indefinite duration, becoming active when cast, and deactivated when re-cast.
+            * Reactive Armor, Protection, and Magic Reflection will stay onï¿½even after logging out, even after dyingï¿½until you ï¿½turn them offï¿½ by casting them again.
             * (+20 physical -5 elemental at 100 Inscription)
             */
             if (CheckSequence())

@@ -1,3 +1,4 @@
+using Server.Mobiles;
 using Server.Targeting;
 
 namespace Server.Spells.First
@@ -19,7 +20,11 @@ namespace Server.Spells.First
 
         public override void OnCast()
         {
-            Caster.Target = new NightSightTarget(this);
+            if (PreTarget != null)
+            {
+                if (CheckBSequence((Mobile) PreTarget)) Target((Mobile)PreTarget);
+            }
+            else Caster.Target = new NightSightTarget(this);
         }
 
         public void Target(Mobile targ)
@@ -57,20 +62,22 @@ namespace Server.Spells.First
                 m_Spell = spell;
             }
 
-            protected override void OnTarget(Mobile from, object targeted)
+            protected override void OnTarget(Mobile from, object o)
             {
-                if (targeted is Mobile && m_Spell.CheckBSequence((Mobile)targeted))
-                {
-                    m_Spell.Target((Mobile)targeted);
-                }
-
-                m_Spell.FinishSequence();
+                if (!(o is Mobile)) return;
+                if (m_Spell.Caster is PlayerMobile) m_Spell.Invoke(o);
+                else if (!m_Spell.CheckBSequence((Mobile) o)) return;
+                else m_Spell.Target((Mobile) o);
             }
 
             protected override void OnTargetFinish(Mobile from)
             {
-                m_Spell.FinishSequence();
+                if (!(m_Spell.Caster is PlayerMobile))
+                {
+                    m_Spell.FinishSequence();
+                }
             }
+
         }
     }
 }

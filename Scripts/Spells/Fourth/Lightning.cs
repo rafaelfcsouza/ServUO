@@ -21,14 +21,8 @@ namespace Server.Spells.Fourth
 
         public override void OnCast()
         {
-            if (PreTarget != null)
-            {
-                Target((IDamageable)PreTarget);
-            }
-            else
-            {
-                Caster.Target = new InternalTarget(this);
-            }
+            if (PreTarget != null) Target((IDamageable)PreTarget);
+            else Caster.Target = new InternalTarget(this);
         }
 
         public void Target(IDamageable m)
@@ -75,11 +69,9 @@ namespace Server.Spells.Fourth
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (o is IDamageable)
-                {
-                    if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
-                    else m_Owner.Target((IDamageable) o);
-                }
+                if (!(o is IDamageable)) return;
+                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
+                else m_Owner.Target((IDamageable) o);
             }
 
             protected override void OnTargetFinish(Mobile from)
