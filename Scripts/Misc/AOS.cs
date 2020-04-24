@@ -212,7 +212,7 @@ namespace Server
 
                 /* Per EA's UO Herald Pub48 (ML):
                 * ((resist spellsx10)/20 + 10=percentage of damage resisted)
-                * 
+                *
                 * Tested 12/29/2017-
                 * No cap, also, above forumula is only in effect vs. creatures
                 */
@@ -356,7 +356,7 @@ namespace Server
             SpiritSpeak.CheckDisrupt(m);
 
             if (m.Spell != null)
-                ((Spell)m.Spell).CheckCasterDisruption(true, phys, fire, cold, pois, nrgy);
+                ((Spell)m.Spell).OnCasterHurt(phys, fire, cold, pois, nrgy);
 
             BattleLust.IncreaseBattleLust(m, totalDamage);
 
@@ -2564,8 +2564,8 @@ namespace Server
         ResonancePoison = 0x00000100,
         ResonanceEnergy = 0x00000200,
         ResonanceKinetic = 0x00000400,
-        /*Soul Charge is wrong. 
-         * Do not use these types. 
+        /*Soul Charge is wrong.
+         * Do not use these types.
          * Use AosArmorAttribute type only.
          * Fill these in with any new attributes.*/
         SoulChargeFire = 0x00000800,

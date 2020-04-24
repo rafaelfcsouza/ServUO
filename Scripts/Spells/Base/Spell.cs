@@ -143,14 +143,12 @@ namespace Server.Spells
 
             contexts.Remove(d);
 
-            if (DelayDamageFamily != null)
+            if (DelayDamageFamily == null) return;
+            foreach (Type t in DelayDamageFamily)
             {
-                foreach (Type t in DelayDamageFamily)
+                if (_MContextTable.TryGetValue(t, out contexts))
                 {
-                    if (_MContextTable.TryGetValue(t, out contexts))
-                    {
-                        contexts.Remove(d);
-                    }
+                    contexts.Remove(d);
                 }
             }
         }
@@ -168,25 +166,23 @@ namespace Server.Spells
 
             NegativeAttributes.OnCombatAction(Caster);
 
-            if (d is Mobile)
-            {
-                if ((Mobile)d != Caster)
-                    NegativeAttributes.OnCombatAction((Mobile)d);
+            if (!(d is Mobile)) return;
 
-                EvilOmenSpell.TryEndEffect((Mobile)d);
-            }
+            if ((Mobile)d != Caster)
+                NegativeAttributes.OnCombatAction((Mobile)d);
+
+            EvilOmenSpell.TryEndEffect((Mobile)d);
         }
 
         public virtual int GetNewAosDamage(int bonus, int dice, int sides, IDamageable singleTarget)
         {
-            if (singleTarget != null)
-            {
-                return GetNewAosDamage(bonus, dice, sides, (Caster.Player && singleTarget is PlayerMobile), GetDamageScalar(singleTarget as Mobile), singleTarget);
-            }
-            else
+            if (singleTarget == null)
             {
                 return GetNewAosDamage(bonus, dice, sides, false, null);
             }
+
+            return GetNewAosDamage(bonus, dice, sides, (Caster.Player && singleTarget is PlayerMobile),
+                GetDamageScalar(singleTarget as Mobile), singleTarget);
         }
 
         public virtual int GetNewAosDamage(int bonus, int dice, int sides, bool playerVsPlayer, IDamageable damageable)
@@ -221,74 +217,83 @@ namespace Server.Spells
 
         public virtual void OnCasterHurt()
         {
-            CheckCasterDisruption(false, 0, 0, 0, 0, 0);
+            OnCasterHurt(false, 0, 0, 0, 0, 0);
         }
 
-        public virtual void CheckCasterDisruption(bool checkElem = false, int phys = 0, int fire = 0, int cold = 0, int pois = 0, int nrgy = 0)
+        public void OnCasterHurt(int phys, int fire, int cold, int pois, int nrgy)
+        {
+            OnCasterHurt(true, phys, fire, cold, pois, nrgy);
+        }
+
+        private void OnCasterHurt(bool checkElem, int phys, int fire, int cold, int pois, int nrgy)
+        {
+            if (CheckCasterDisruption(checkElem, phys, fire, cold, pois, nrgy))
+            {
+                Disturb(DisturbType.Hurt, false, true);
+            }
+        }
+
+        private bool CheckCasterDisruption(bool checkElem = false, int phys = 0, int fire = 0, int cold = 0, int pois = 0, int nrgy = 0)
         {
             if (!Caster.Player || Caster.AccessLevel > AccessLevel.Player)
             {
-                return;
+                return false;
             }
 
-            if (IsCasting)
+            if (!IsCasting) return false;
+
+            object o = ProtectionSpell.Registry[Caster];
+            bool disturb = true;
+
+            if (o != null && o is double)
             {
-                object o = ProtectionSpell.Registry[Caster];
-                bool disturb = true;
-
-                if (o != null && o is double)
-                {
-                    if (((double)o) > Utility.RandomDouble() * 100.0)
-                    {
-                        disturb = false;
-                    }
-                }
-
-                #region Stygian Abyss
-                int focus = SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.CastingFocus);
-
-                if (BaseFishPie.IsUnderEffects(Caster, FishPieEffect.CastFocus))
-                    focus += 2;
-
-                if (focus > 12)
-                    focus = 12;
-
-                focus += Caster.Skills[SkillName.Inscribe].Value >= 50 ? GetInscribeFixed(Caster) / 200 : 0;
-
-                if (focus > 0 && focus > Utility.Random(100))
+                if (((double)o) > Utility.RandomDouble() * 100.0)
                 {
                     disturb = false;
-                    Caster.SendLocalizedMessage(1113690); // You regain your focus and continue casting the spell.
-                }
-                else if (checkElem)
-                {
-                    int res = 0;
-
-                    if (phys == 100)
-                        res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonanceKinetic));
-
-                    else if (fire == 100)
-                        res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonanceFire));
-
-                    else if (cold == 100)
-                        res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonanceCold));
-
-                    else if (pois == 100)
-                        res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonancePoison));
-
-                    else if (nrgy == 100)
-                        res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonanceEnergy));
-
-                    if (res > Utility.Random(100))
-                        disturb = false;
-                }
-                #endregion
-
-                if (disturb)
-                {
-                    Disturb(DisturbType.Hurt, false, true);
                 }
             }
+
+            #region Stygian Abyss
+            int focus = SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.CastingFocus);
+
+            if (BaseFishPie.IsUnderEffects(Caster, FishPieEffect.CastFocus))
+                focus += 2;
+
+            if (focus > 12)
+                focus = 12;
+
+            focus += Caster.Skills[SkillName.Inscribe].Value >= 50 ? GetInscribeFixed(Caster) / 200 : 0;
+
+            if (focus > 0 && focus > Utility.Random(100))
+            {
+                disturb = false;
+                Caster.SendLocalizedMessage(1113690); // You regain your focus and continue casting the spell.
+            }
+            else if (checkElem)
+            {
+                int res = 0;
+
+                if (phys == 100)
+                    res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonanceKinetic));
+
+                else if (fire == 100)
+                    res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonanceFire));
+
+                else if (cold == 100)
+                    res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonanceCold));
+
+                else if (pois == 100)
+                    res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonancePoison));
+
+                else if (nrgy == 100)
+                    res = Math.Min(40, SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.ResonanceEnergy));
+
+                if (res > Utility.Random(100))
+                    disturb = false;
+            }
+            #endregion
+
+            return disturb;
         }
 
         public virtual void OnCasterKilled()
