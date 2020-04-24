@@ -196,7 +196,7 @@ namespace Server.Spells
 
             int damage = Utility.Dice(dice, sides, bonus) * 100;
 
-            int inscribeSkill = GetInscribeFixed(Caster);
+            int inscribeSkill = GetInscribeSkill(Caster);
             int scribeBonus = inscribeSkill >= 1000 ? 10 : inscribeSkill / 200;
 
             int damageBonus = scribeBonus +
@@ -262,7 +262,7 @@ namespace Server.Spells
             if (focus > 12)
                 focus = 12;
 
-            focus += Caster.Skills[SkillName.Inscribe].Value >= 50 ? GetInscribeFixed(Caster) / 200 : 0;
+            focus += Caster.Skills[SkillName.Inscribe].Value >= 50 ? GetInscribeSkill(Caster) / 200 : 0;
 
             if (focus > 0 && focus > Utility.Random(100))
             {
@@ -329,25 +329,19 @@ namespace Server.Spells
         /// <returns></returns>
         public virtual bool CheckMovement(Mobile caster)
         {
-            if (IsCasting && BlocksMovement && (!(Caster is BaseCreature) || ((BaseCreature)Caster).FreezeOnCast))
-            {
-                return false;
-            }
-
-            return true;
+            return !IsCasting || !BlocksMovement || (Caster is BaseCreature creature && !creature.FreezeOnCast);
         }
 
         public virtual bool OnCasterEquiping(Item item)
         {
-            if (IsCasting)
-            {
-                if ((item.Layer == Layer.OneHanded || item.Layer == Layer.TwoHanded) && item.AllowEquipedCast(Caster))
-                {
-                    return true;
-                }
+            if (!IsCasting) return true;
 
-                Disturb(DisturbType.EquipRequest);
+            if ((item.Layer == Layer.OneHanded || item.Layer == Layer.TwoHanded) && item.AllowEquipedCast(Caster))
+            {
+                return true;
             }
+
+            Disturb(DisturbType.EquipRequest);
 
             return true;
         }
@@ -399,38 +393,31 @@ namespace Server.Spells
             return false;
         }
 
-        public virtual double GetInscribeSkill(Mobile m)
-        {
-            // There is no chance to gain
-            // m.CheckSkill( SkillName.Inscribe, 0.0, 120.0 );
-            return m.Skills[SkillName.Inscribe].Value;
-        }
-
-        public virtual int GetInscribeFixed(Mobile m)
+        public int GetInscribeSkill(Mobile m)
         {
             // There is no chance to gain
             // m.CheckSkill( SkillName.Inscribe, 0.0, 120.0 );
             return m.Skills[SkillName.Inscribe].Fixed;
         }
 
-        public virtual int GetDamageFixed(Mobile m)
+        public int GetDamageFixed(Mobile m)
         {
             //m.CheckSkill( DamageSkill, 0.0, m.Skills[DamageSkill].Cap );
             return m.Skills[DamageSkill].Fixed;
         }
 
-        public virtual double GetDamageSkill(Mobile m)
+        public double GetDamageSkill(Mobile m)
         {
             //m.CheckSkill( DamageSkill, 0.0, m.Skills[DamageSkill].Cap );
             return m.Skills[DamageSkill].Value;
         }
 
-        public virtual double GetResistSkill(Mobile m)
+        public double GetResistSkill(Mobile m)
         {
             return m.Skills[SkillName.MagicResist].Value - EvilOmenSpell.GetResistMalus(m);
         }
 
-        public virtual double GetDamageScalar(Mobile target)
+        public double GetDamageScalar(Mobile target)
         {
             double scalar = 1.0;
 
@@ -487,7 +474,6 @@ namespace Server.Spells
 
                     scalar = isSuper ? 2.0 : 3.0;
                 }
-
 
                 TransformContext context = TransformationSpellHelper.GetContext(defender);
 
@@ -635,23 +621,14 @@ namespace Server.Spells
                 return;
             }
 
-            if (Info.Mantra != null && Info.Mantra.Length > 0 && (Caster.Player || (Caster is BaseCreature && ((BaseCreature)Caster).ShowSpellMantra)))
+            if (!string.IsNullOrEmpty(Info.Mantra) && (Caster.Player || Caster is BaseCreature creature && creature.ShowSpellMantra))
             {
                 Caster.PublicOverheadMessage(MessageType.Spell, Caster.SpeechHue, true, Info.Mantra, false);
             }
         }
 
-        public virtual bool BlockedByHorrificBeast
-        {
-            get
-            {
-                if (TransformationSpellHelper.UnderTransformation(Caster, typeof(HorrificBeastSpell)) &&
-                    SpellHelper.HasSpellFocus(Caster, CastSkill))
-                    return false;
-
-                return true;
-            }
-        }
+        public virtual bool BlockedByHorrificBeast => !TransformationSpellHelper.UnderTransformation(Caster, typeof(HorrificBeastSpell))
+                                                      || !SpellHelper.HasSpellFocus(Caster, CastSkill);
 
         public virtual bool BlockedByAnimalForm => true;
         public virtual bool BlocksMovement => false;
@@ -682,9 +659,10 @@ namespace Server.Spells
             {
                 return false;
             }
-            else if (Caster is PlayerMobile && ((PlayerMobile)Caster).Peaced)
+
+            if (Caster is PlayerMobile mobile && mobile.Peaced)
             {
-                Caster.SendLocalizedMessage(1072060); // You cannot cast a spell while calmed.
+                mobile.SendLocalizedMessage(1072060); // You cannot cast a spell while calmed.
             }
             else if (Scroll is BaseWand && Caster.Spell != null && Caster.Spell.IsCasting)
             {
@@ -715,38 +693,28 @@ namespace Server.Spells
             {
                 Caster.LocalOverheadMessage(MessageType.Regular, 0x22, 502625, ScaleMana(GetMana()).ToString()); // Insufficient mana. You must have at least ~1_MANA_REQUIREMENT~ Mana to use this spell.
             }
-            else if (Caster.Race == Race.Gargoyle && Caster.Flying)
+            else if (Caster.Race == Race.Gargoyle && Caster.Flying && BaseMount.OnFlightPath(Caster))
             {
-                if (BaseMount.OnFlightPath(Caster))
+                if (Caster.IsPlayer())
                 {
-                    if (Caster.IsPlayer())
-                    {
-                        Caster.SendLocalizedMessage(1113750); // You may not cast spells while flying over such precarious terrain.
-                        return false;
-                    }
-                    else
-                    {
-                        Caster.SendMessage("Your staff level allows you to cast while flying over precarious terrain.");
-                    }
+                    Caster.SendLocalizedMessage(1113750); // You may not cast spells while flying over such precarious terrain.
+                    return false;
                 }
+
+                Caster.SendMessage("Your staff level allows you to cast while flying over precarious terrain.");
             }
 
-            if (Caster.Spell == null && Caster.CheckSpellCast(this) && CheckCast() &&
-                    Caster.Region.OnBeginSpellCast(Caster, this))
-            {
-                return true;
-            }
-
-            return false;
+            return Caster.Spell == null && Caster.CheckSpellCast(this) && CheckCast() &&
+                   Caster.Region.OnBeginSpellCast(Caster, this);
         }
 
-        public virtual void Invoke(object target)
+        protected void Invoke(object target)
         {
             PreTarget = target;
             Invoke();
         }
 
-        public virtual bool Invoke()
+        protected bool Invoke()
         {
             StartCastTime = Core.TickCount;
 
