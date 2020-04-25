@@ -1278,7 +1278,7 @@ namespace Server.Mobiles
 
             if (UsesMagery)
             {
-                bool isDispel = (targ is SpellTarget<DispelSpell, Mobile> || targ is MassDispelSpell.InternalTarget);
+                bool isDispel = (targ is SpellTarget<DispelSpell, Mobile> || targ is SpellTarget<MassDispelSpell, IPoint3D>);
                 bool isParalyze = (targ is SpellTarget<ParalyzeSpell, Mobile>);
                 bool isTeleport = (targ is SpellTarget<TeleportSpell, IPoint3D>);
                 bool isSummon = (targ is EnergyVortexSpell.InternalTarget || targ is BladeSpiritsSpell.BladeSpiritsSpellTarget ||

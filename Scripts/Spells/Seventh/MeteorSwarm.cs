@@ -42,29 +42,28 @@ namespace Server.Spells.Seventh
 
         public override SpellCircle Circle => SpellCircle.Seventh;
         public override bool DelayedDamage => true;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this, Item);
-        }
 
-        public void Target(IPoint3D p, Item item)
+        protected override Target CreateTarget() => new SpellTarget<MeteorSwarmSpell, IPoint3D>(this, TargetFlags.None);
+
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
             if (!Caster.CanSee(p))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
             }
-            else if (SpellHelper.CheckTown(p, Caster) && (item != null || CheckSequence()))
+            else if (SpellHelper.CheckTown(p, Caster) && (Item != null || CheckSequence()))
             {
-                if (item != null)
+                if (Item != null)
                 {
-                    if (item is MaskOfKhalAnkur)
+                    if (Item is MaskOfKhalAnkur)
                     {
-                        ((MaskOfKhalAnkur)item).Charges--;
+                        ((MaskOfKhalAnkur)Item).Charges--;
                     }
 
-                    if (item is PendantOfKhalAnkur)
+                    if (Item is PendantOfKhalAnkur)
                     {
-                        ((PendantOfKhalAnkur)item).Charges--;
+                        ((PendantOfKhalAnkur)Item).Charges--;
                     }
                 }
 
@@ -96,7 +95,7 @@ namespace Server.Spells.Seventh
                     {
                         Timer.DelayCall(TimeSpan.FromSeconds(.5), () =>
                         {
-                            source.MovingParticles(target, item != null ? 0xA1ED : 0x36D4, 7, 0, false, true, 9501, 1, 0, 0x100);
+                            source.MovingParticles(target, Item != null ? 0xA1ED : 0x36D4, 7, 0, false, true, 9501, 1, 0, 0x100);
                         });
                     }
 
@@ -108,39 +107,13 @@ namespace Server.Spells.Seventh
                     Caster.DoHarmful(id);
                     SpellHelper.Damage(this, target, damage, 0, 100, 0, 0, 0);
 
-                    Caster.MovingParticles(id, item != null ? 0xA1ED : 0x36D4, 7, 0, false, true, 9501, 1, 0, 0x100);
+                    Caster.MovingParticles(id, Item != null ? 0xA1ED : 0x36D4, 7, 0, false, true, 9501, 1, 0, 0x100);
                 }
 
                 ColUtility.Free(targets);
             }
 
             FinishSequence();
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly MeteorSwarmSpell m_Owner;
-            private readonly Item m_Item;
-
-            public InternalTarget(MeteorSwarmSpell owner, Item item)
-                : base(10, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-                m_Item = item;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                IPoint3D p = o as IPoint3D;
-
-                if (p != null)
-                    m_Owner.Target(p, m_Item);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

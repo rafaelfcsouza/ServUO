@@ -5,6 +5,7 @@ using Server.Multis;
 using Server.Network;
 using Server.Targeting;
 using System;
+using Server.Engines.NewMagincia;
 
 namespace Server.Spells.Seventh
 {
@@ -19,6 +20,7 @@ namespace Server.Spells.Seventh
             Reagent.SulfurousAsh);
 
         private readonly RunebookEntry m_Entry;
+        private bool _Casted;
 
         public GateTravelSpell(Mobile caster, Item scroll)
             : this(caster, scroll, null)
@@ -32,11 +34,19 @@ namespace Server.Spells.Seventh
         }
 
         public override SpellCircle Circle => SpellCircle.Seventh;
+
+        protected override Target CreateTarget() => new GateTravelSpellTarget(this);
+
         public override void OnCast()
         {
             if (m_Entry == null)
             {
-                Caster.Target = new InternalTarget(this);
+                base.OnCast();
+            }
+            else if (!_Casted && Caster is PlayerMobile)
+            {
+                _Casted = true;
+                Invoke();
             }
             else
             {
@@ -48,6 +58,63 @@ namespace Server.Spells.Seventh
                 {
                     Effect(m_Entry.Location, m_Entry.Map, true, false);
                 }
+            }
+        }
+
+        public override void Target(object o)
+        {
+            if (o is RecallRune recallRune)
+            {
+                RecallRune rune = recallRune;
+
+                if (rune.Marked)
+                {
+                    if (rune.Type == RecallRuneType.Ship)
+                    {
+                        Effect(rune.Galleon);
+                    }
+                    else
+                    {
+                        Effect(rune.Target, rune.TargetMap, true);
+                    }
+                }
+                else
+                {
+                    Caster.SendLocalizedMessage(501805); // That rune is not yet marked.
+                }
+            }
+            else if (o is Runebook runebook)
+            {
+                RunebookEntry e = runebook.Default;
+
+                if (e != null)
+                {
+                    if (e.Type == RecallRuneType.Ship)
+                    {
+                        Effect(e.Galleon);
+                    }
+                    else
+                    {
+                        Effect(e.Location, e.Map, true);
+                    }
+                }
+                else
+                {
+                    Caster.SendLocalizedMessage(502354); // Target is not marked.
+                }
+            }
+            else if (o is WritOfLease ofLease)
+            {
+                Engines.NewMagincia.WritOfLease lease = ofLease;
+
+                if (lease.RecallLoc != Point3D.Zero && lease.Facet != null && lease.Facet != Map.Internal)
+                    Effect(lease.RecallLoc, lease.Facet, false);
+                else
+                    Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 502357, Caster.Name, "")); // I can not recall from that object.
+            }
+            else
+            {
+                Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 501030, Caster.Name, "")); // I can not gate travel from that object.
             }
         }
 
@@ -108,7 +175,7 @@ namespace Server.Spells.Seventh
             else if (!SpellHelper.CheckTravel(Caster, map, loc, TravelCheckType.GateTo))
             {
             }
-            else if (map == Map.Felucca && Caster is PlayerMobile && ((PlayerMobile)Caster).Young)
+            else if (map == Map.Felucca && Caster is PlayerMobile && ((PlayerMobile) Caster).Young)
             {
                 Caster.SendLocalizedMessage(1049543); // You decide against traveling to Felucca while you are still young.
             }
@@ -180,6 +247,7 @@ namespace Server.Spells.Seventh
                     break;
                 }
             }
+
             eable.Free();
 
             return _gateFound;
@@ -210,9 +278,9 @@ namespace Server.Spells.Seventh
 
             public override void UseGate(Mobile m)
             {
-                if (LinkedGate == null || !(LinkedGate is InternalItem) || !((InternalItem)LinkedGate).BoatGate || !LinkedGate.Deleted)
+                if (LinkedGate == null || !(LinkedGate is InternalItem) || !((InternalItem) LinkedGate).BoatGate || !LinkedGate.Deleted)
                 {
-                    if (LinkedGate != null && ((InternalItem)LinkedGate).BoatGate)
+                    if (LinkedGate != null && ((InternalItem) LinkedGate).BoatGate)
                     {
                         BaseBoat boat = BaseBoat.FindBoatAt(LinkedGate);
 
@@ -253,6 +321,7 @@ namespace Server.Spells.Seventh
             }
 
             public override bool ShowFeluccaWarning => true;
+
             public override void Serialize(GenericWriter writer)
             {
                 base.Serialize(writer);
@@ -283,82 +352,16 @@ namespace Server.Spells.Seventh
             }
         }
 
-        private class InternalTarget : Target
+        private class GateTravelSpellTarget : SpellTarget<GateTravelSpell, object>
         {
-            private readonly GateTravelSpell m_Owner;
-
-            public InternalTarget(GateTravelSpell owner)
-                : base(12, false, TargetFlags.None)
+            public GateTravelSpellTarget(GateTravelSpell owner)
+                : base(owner, TargetFlags.None)
             {
-                m_Owner = owner;
-
                 owner.Caster.LocalOverheadMessage(MessageType.Regular, 0x3B2, 501029); // Select Marked item.
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is RecallRune)
-                {
-                    RecallRune rune = (RecallRune)o;
-
-                    if (rune.Marked)
-                    {
-                        if (rune.Type == RecallRuneType.Ship)
-                        {
-                            m_Owner.Effect(rune.Galleon);
-                        }
-                        else
-                        {
-                            m_Owner.Effect(rune.Target, rune.TargetMap, true);
-                        }
-                    }
-                    else
-                    {
-                        from.SendLocalizedMessage(501805); // That rune is not yet marked.
-                    }
-                }
-                else if (o is Runebook)
-                {
-                    RunebookEntry e = ((Runebook)o).Default;
-
-                    if (e != null)
-                    {
-                        if (e.Type == RecallRuneType.Ship)
-                        {
-                            m_Owner.Effect(e.Galleon);
-                        }
-                        else
-                        {
-                            m_Owner.Effect(e.Location, e.Map, true);
-                        }
-                    }
-                    else
-                    {
-                        from.SendLocalizedMessage(502354); // Target is not marked.
-                    }
-                }
-                else if (o is Engines.NewMagincia.WritOfLease)
-                {
-                    Engines.NewMagincia.WritOfLease lease = (Engines.NewMagincia.WritOfLease)o;
-
-                    if (lease.RecallLoc != Point3D.Zero && lease.Facet != null && lease.Facet != Map.Internal)
-                        m_Owner.Effect(lease.RecallLoc, lease.Facet, false);
-                    else
-                        from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 502357, from.Name, "")); // I can not recall from that object.
-                }
-                else
-                {
-                    from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 501030, from.Name, "")); // I can not gate travel from that object.
-                }
             }
 
             protected override void OnNonlocalTarget(Mobile from, object o)
             {
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

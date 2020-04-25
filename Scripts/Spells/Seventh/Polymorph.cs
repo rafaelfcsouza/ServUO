@@ -3,6 +3,7 @@ using Server.Items;
 using Server.Spells.Fifth;
 using System;
 using System.Collections;
+using Server.Mobiles;
 
 namespace Server.Spells.Seventh
 {
@@ -17,6 +18,8 @@ namespace Server.Spells.Seventh
             Reagent.MandrakeRoot);
         private static readonly Hashtable m_Timers = new Hashtable();
         private readonly int m_NewBody;
+        private bool _Casted;
+
         public PolymorphSpell(Mobile caster, Item scroll, int body)
             : base(caster, scroll, m_Info)
         {
@@ -82,6 +85,12 @@ namespace Server.Spells.Seventh
 
         public override void OnCast()
         {
+            if (!_Casted && Caster is PlayerMobile)
+            {
+                Invoke();
+                _Casted = true;
+                return;
+            }
             if (Caster.Flying)
             {
                 Caster.SendLocalizedMessage(1113415); // You cannot use this ability while flying.

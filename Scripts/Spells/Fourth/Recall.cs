@@ -65,17 +65,16 @@ namespace Server.Spells.Fourth
 
         public override void OnCast()
         {
-            if (PreTarget != null) Target(PreTarget);
-            else if (!_Casted)
+            if (m_Entry == null && m_SearchMap == null && m_AuctionMap == null)
+            {
+                base.OnCast();
+            }
+            else if (!_Casted && Caster is PlayerMobile)
             {
                 _Casted = true;
                 Invoke();
             }
-            else if (m_Entry == null && m_SearchMap == null && m_AuctionMap == null)
-            {
-                Caster.Target = CreateTarget();
-            }
-            else if (_Casted || !(Caster is PlayerMobile))
+            else
             {
                 Point3D loc;
                 Map map;
