@@ -21,8 +21,10 @@ namespace Server.Spells.Fourth
         private readonly Runebook m_Book;
         private readonly VendorSearchMap m_SearchMap;
         private readonly AuctionMap m_AuctionMap;
+        private bool _Casted;
 
-        public bool NoSkillRequirement => (m_Book != null || m_AuctionMap != null || m_SearchMap != null) || TransformationSpellHelper.UnderTransformation(Caster, typeof(WraithFormSpell));
+        public bool NoSkillRequirement => (m_Book != null || m_AuctionMap != null || m_SearchMap != null) ||
+                                          TransformationSpellHelper.UnderTransformation(Caster, typeof(WraithFormSpell));
 
         public RecallSpell(Mobile caster, Item scroll)
             : this(caster, scroll, null, null)
@@ -49,21 +51,30 @@ namespace Server.Spells.Fourth
         }
 
         public override SpellCircle Circle => SpellCircle.Fourth;
+
         public override void GetCastSkills(out double min, out double max)
         {
-            if (NoSkillRequirement)	//recall using Runebook charge, wraith form or using vendor search map
+            if (NoSkillRequirement) //recall using Runebook charge, wraith Caster or using vendor search map
                 min = max = 0;
             else
                 base.GetCastSkills(out min, out max);
         }
 
+        protected override Target CreateTarget() => new RecallSpellTarget(this);
+
         public override void OnCast()
         {
-            if (m_Entry == null && m_SearchMap == null && m_AuctionMap == null)
+            if (PreTarget != null) Target(PreTarget);
+            else if (!_Casted)
             {
-                Caster.Target = new InternalTarget(this);
+                _Casted = true;
+                Invoke();
             }
-            else
+            else if (m_Entry == null && m_SearchMap == null && m_AuctionMap == null)
+            {
+                Caster.Target = CreateTarget();
+            }
+            else if (_Casted || !(Caster is PlayerMobile))
             {
                 Point3D loc;
                 Map map;
@@ -142,6 +153,71 @@ namespace Server.Spells.Fourth
             }
         }
 
+        public override void Target(object o)
+        {
+            if (o is RecallRune rune)
+            {
+                if (rune.Marked)
+                {
+                    if (rune.Type == RecallRuneType.Ship)
+                    {
+                        Effect(rune.Galleon);
+                    }
+                    else
+                    {
+                        Effect(rune.Target, rune.TargetMap, true);
+                    }
+                }
+                else
+                {
+                    Caster.SendLocalizedMessage(501805); // That rune is not yet marked.
+                }
+            }
+            else if (o is Runebook)
+            {
+                RunebookEntry e = ((Runebook) o).Default;
+
+                if (e != null)
+                {
+                    if (e.Type == RecallRuneType.Ship)
+                    {
+                        Effect(e.Galleon);
+                    }
+                    else
+                    {
+                        Effect(e.Location, e.Map, true);
+                    }
+                }
+                else
+                {
+                    Caster.SendLocalizedMessage(502354); // Target is not marked.
+                }
+            }
+            else if (o is Key && ((Key) o).KeyValue != 0 && ((Key) o).Link is BaseBoat)
+            {
+                BaseBoat boat = ((Key) o).Link as BaseBoat;
+
+                if (!boat.Deleted && boat.CheckKey(((Key) o).KeyValue))
+                    Effect(boat.GetMarkedLocation(), boat.Map, false, true);
+                else
+                    Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 502357, Caster.Name, "")); // I can not recall Caster that object.
+            }
+            else if (o is Engines.NewMagincia.WritOfLease)
+            {
+                Engines.NewMagincia.WritOfLease lease = (Engines.NewMagincia.WritOfLease) o;
+
+                if (lease.RecallLoc != Point3D.Zero && lease.Facet != null && lease.Facet != Map.Internal)
+                    Effect(lease.RecallLoc, lease.Facet, false);
+                else
+                    Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 502357, Caster.Name, "")); // I can not recall Caster that object.
+            }
+
+            else
+            {
+                Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 502357, Caster.Name, "")); // I can not recall Caster that object.
+            }
+        }
+
         public void Effect(Point3D loc, Map map, bool checkMulti, bool isboatkey = false)
         {
             if (Server.Engines.VvV.VvVSigil.ExistsOn(Caster))
@@ -158,7 +234,7 @@ namespace Server.Spells.Fourth
             else if (!SpellHelper.CheckTravel(Caster, map, loc, TravelCheckType.RecallTo))
             {
             }
-            else if (map == Map.Felucca && Caster is PlayerMobile && ((PlayerMobile)Caster).Young)
+            else if (map == Map.Felucca && Caster is PlayerMobile && ((PlayerMobile) Caster).Young)
             {
                 Caster.SendLocalizedMessage(1049543); // You decide against traveling to Felucca while you are still young.
             }
@@ -219,92 +295,16 @@ namespace Server.Spells.Fourth
             FinishSequence();
         }
 
-        private class InternalTarget : Target
+        private class RecallSpellTarget : SpellTarget<RecallSpell, object>
         {
-            private readonly RecallSpell m_Owner;
-
-            public InternalTarget(RecallSpell owner)
-                : base(10, false, TargetFlags.None)
+            public RecallSpellTarget(RecallSpell spell)
+                : base(spell, TargetFlags.None)
             {
-                m_Owner = owner;
-
-                owner.Caster.LocalOverheadMessage(MessageType.Regular, 0x3B2, 501029); // Select Marked item.
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is RecallRune)
-                {
-                    RecallRune rune = (RecallRune)o;
-
-                    if (rune.Marked)
-                    {
-                        if (rune.Type == RecallRuneType.Ship)
-                        {
-                            m_Owner.Effect(rune.Galleon);
-                        }
-                        else
-                        {
-                            m_Owner.Effect(rune.Target, rune.TargetMap, true);
-                        }
-                    }
-                    else
-                    {
-                        from.SendLocalizedMessage(501805); // That rune is not yet marked.
-                    }
-                }
-                else if (o is Runebook)
-                {
-                    RunebookEntry e = ((Runebook)o).Default;
-
-                    if (e != null)
-                    {
-                        if (e.Type == RecallRuneType.Ship)
-                        {
-                            m_Owner.Effect(e.Galleon);
-                        }
-                        else
-                        {
-                            m_Owner.Effect(e.Location, e.Map, true);
-                        }
-                    }
-                    else
-                    {
-                        from.SendLocalizedMessage(502354); // Target is not marked.
-                    }
-                }
-                else if (o is Key && ((Key)o).KeyValue != 0 && ((Key)o).Link is BaseBoat)
-                {
-                    BaseBoat boat = ((Key)o).Link as BaseBoat;
-
-                    if (!boat.Deleted && boat.CheckKey(((Key)o).KeyValue))
-                        m_Owner.Effect(boat.GetMarkedLocation(), boat.Map, false, true);
-                    else
-                        from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 502357, from.Name, "")); // I can not recall from that object.
-                }
-                else if (o is Engines.NewMagincia.WritOfLease)
-                {
-                    Engines.NewMagincia.WritOfLease lease = (Engines.NewMagincia.WritOfLease)o;
-
-                    if (lease.RecallLoc != Point3D.Zero && lease.Facet != null && lease.Facet != Map.Internal)
-                        m_Owner.Effect(lease.RecallLoc, lease.Facet, false);
-                    else
-                        from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 502357, from.Name, "")); // I can not recall from that object.
-                }
-
-                else
-                {
-                    from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 502357, from.Name, "")); // I can not recall from that object.
-                }
+                spell.Caster.LocalOverheadMessage(MessageType.Regular, 0x3B2, 501029); // Select Marked item.
             }
 
             protected override void OnNonlocalTarget(Mobile from, object o)
             {
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

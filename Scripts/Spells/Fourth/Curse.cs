@@ -86,10 +86,7 @@ namespace Server.Spells.Fourth
             return m_UnderEffect.ContainsKey(m);
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<CurseSpell, Mobile>(this, TargetFlags.Harmful);
 
         public static bool DoCurse(Mobile caster, Mobile m, bool masscurse)
         {
@@ -145,8 +142,9 @@ namespace Server.Spells.Fourth
             return true;
         }
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (!Caster.CanSee(m))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -168,27 +166,6 @@ namespace Server.Spells.Fourth
             }
 
             FinishSequence();
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly CurseSpell m_Owner;
-            public InternalTarget(CurseSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

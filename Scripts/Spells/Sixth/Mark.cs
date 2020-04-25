@@ -1,4 +1,5 @@
 using Server.Items;
+using Server.Mobiles;
 using Server.Multis;
 using Server.Network;
 using Server.Targeting;
@@ -14,16 +15,15 @@ namespace Server.Spells.Sixth
             Reagent.BlackPearl,
             Reagent.Bloodmoss,
             Reagent.MandrakeRoot);
+
         public MarkSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
         }
 
         public override SpellCircle Circle => SpellCircle.Sixth;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+
+        protected override Target CreateTarget() => new MarkSpellTarget(this);
 
         public override bool CheckCast()
         {
@@ -33,8 +33,9 @@ namespace Server.Spells.Sixth
             return SpellHelper.CheckTravel(Caster, TravelCheckType.Mark);
         }
 
-        public void Target(RecallRune rune)
+        public override void Target(object o)
         {
+            RecallRune rune = o as RecallRune;
             BaseBoat boat = BaseBoat.FindBoatAt(Caster.Location, Caster.Map);
 
             if (!Caster.CanSee(rune))
@@ -67,30 +68,24 @@ namespace Server.Spells.Sixth
             FinishSequence();
         }
 
-        private class InternalTarget : Target
+        private class MarkSpellTarget : SpellTarget<MarkSpell, RecallRune>
         {
-            private readonly MarkSpell m_Owner;
-            public InternalTarget(MarkSpell owner)
-                : base(10, false, TargetFlags.None)
+            public MarkSpellTarget(MarkSpell spell)
+                : base(spell, TargetFlags.None)
             {
-                m_Owner = owner;
             }
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (o is RecallRune)
+                if (Spell.Caster is PlayerMobile) Spell.Invoke(o);
+                else if (o is RecallRune rune)
                 {
-                    m_Owner.Target((RecallRune)o);
+                    Spell.Target(rune);
                 }
                 else
                 {
                     from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 501797, from.Name, "")); // I cannot mark that object.
                 }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

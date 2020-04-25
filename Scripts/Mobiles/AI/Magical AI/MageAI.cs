@@ -1274,7 +1274,7 @@ namespace Server.Mobiles
 
             bool harmful = (targ.Flags & TargetFlags.Harmful) != 0 || targ is HailStormSpell.InternalTarget ||
                           targ is WildfireSpell.InternalTarget;
-            bool beneficial = (targ.Flags & TargetFlags.Beneficial) != 0 || targ is ArchCureSpell.InternalTarget;
+            bool beneficial = (targ.Flags & TargetFlags.Beneficial) != 0 || targ is SpellTarget<ArchCureSpell, IPoint3D>;
 
             if (UsesMagery)
             {
@@ -1283,7 +1283,7 @@ namespace Server.Mobiles
                 bool isTeleport = (targ is SpellTarget<TeleportSpell, IPoint3D>);
                 bool isSummon = (targ is EnergyVortexSpell.InternalTarget || targ is BladeSpiritsSpell.InternalTarget ||
                                 targ is NatureFurySpell.InternalTarget);
-                bool isField = (targ is FireFieldSpell.InternalTarget || targ is PoisonFieldSpell.InternalTarget ||
+                bool isField = (targ is SpellTarget<FireFieldSpell, IPoint3D> || targ is PoisonFieldSpell.InternalTarget ||
                                targ is ParalyzeFieldSpell.InternalTarget);
                 bool isAnimate = (targ is AnimateDeadSpell.InternalTarget);
                 bool isDispelField = (targ is DispelFieldSpell.InternalTarget);

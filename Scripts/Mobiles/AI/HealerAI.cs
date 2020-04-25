@@ -38,7 +38,7 @@ namespace Server.Mobiles
                 {
                     ProcessTarget(targ, m_ACure);
                 }
-                else if (targ is GreaterHealSpell.InternalTarget)
+                else if (targ is SpellTarget<GreaterHealSpell, Mobile>)
                 {
                     ProcessTarget(targ, m_AGHeal);
                 }

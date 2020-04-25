@@ -22,13 +22,12 @@ namespace Server.Spells.Fourth
         public override SpellCircle Circle => SpellCircle.Fourth;
         // Arch cure is now 1/4th of a second faster
         public override TimeSpan CastDelayBase => base.CastDelayBase - TimeSpan.FromSeconds(0.25);
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(IPoint3D p)
+        protected override Target CreateTarget() => new SpellTarget<ArchCureSpell, IPoint3D>(this, TargetFlags.Beneficial);
+
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
             if (!Caster.CanSee(p))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -156,29 +155,6 @@ namespace Server.Spells.Fourth
             }
 
             return false;
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly ArchCureSpell m_Owner;
-            public InternalTarget(ArchCureSpell owner)
-                : base(10, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                IPoint3D p = o as IPoint3D;
-
-                if (p != null)
-                    m_Owner.Target(p);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }
