@@ -17,13 +17,13 @@ namespace Server.Spells.Sixth
         }
 
         public override SpellCircle Circle => SpellCircle.Sixth;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(IPoint3D p)
+        protected override Target CreateTarget() => new SpellTarget<RevealSpell, IPoint3D>(this, TargetFlags.None);
+
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
+
             if (!Caster.CanSee(p))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -70,10 +70,10 @@ namespace Server.Spells.Sixth
             FinishSequence();
         }
 
-        // Reveal uses magery and detect hidden vs. hide and stealth 
+        // Reveal uses magery and detect hidden vs. hide and stealth
         private static bool CheckDifficulty(Mobile from, Mobile m)
         {
-            // Reveal always reveals vs. invisibility spell 
+            // Reveal always reveals vs. invisibility spell
             if (InvisibilitySpell.HasTimer(m))
                 return true;
 
@@ -91,29 +91,6 @@ namespace Server.Spells.Sixth
                 chance = 100;
 
             return chance > Utility.Random(100);
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly RevealSpell m_Owner;
-            public InternalTarget(RevealSpell owner)
-                : base(10, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                IPoint3D p = o as IPoint3D;
-
-                if (p != null)
-                    m_Owner.Target(p);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

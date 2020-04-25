@@ -22,13 +22,12 @@ namespace Server.Spells.Sixth
         }
 
         public override SpellCircle Circle => SpellCircle.Sixth;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(IPoint3D p)
+        protected override Target CreateTarget() => new SpellTarget<ParalyzeFieldSpell, IPoint3D>(this, TargetFlags.None);
+
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
             if (!Caster.CanSee(p))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -206,27 +205,6 @@ namespace Server.Spells.Sixth
                 {
                     m_Item.Delete();
                 }
-            }
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly ParalyzeFieldSpell m_Owner;
-            public InternalTarget(ParalyzeFieldSpell owner)
-                : base(15, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is IPoint3D)
-                    m_Owner.Target((IPoint3D)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

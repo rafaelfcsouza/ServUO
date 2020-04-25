@@ -18,13 +18,13 @@ namespace Server.Spells.Sixth
 
         public override SpellCircle Circle => SpellCircle.Sixth;
         public override bool DelayedDamageStacking => false;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(IDamageable m)
+        protected override Target CreateTarget() => new SpellTarget<ExplosionSpell, IDamageable>(this, TargetFlags.Harmful);
+
+        public override void Target(object o)
         {
+            IDamageable m = o as IDamageable;
+            
             if (HasDelayContext(m))
             {
                 DoHurtFizzle();
@@ -96,27 +96,6 @@ namespace Server.Spells.Sixth
                     if (m_Spell != null)
                         m_Spell.RemoveDelayedDamageContext(m_Attacker);
                 }
-            }
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly ExplosionSpell m_Owner;
-            public InternalTarget(ExplosionSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is IDamageable)
-                    m_Owner.Target((IDamageable)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }
