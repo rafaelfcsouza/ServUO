@@ -51,13 +51,11 @@ namespace Server.Spells.Third
 
         public override SpellCircle Circle => SpellCircle.Third;
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<BlessSpell, Mobile>(this, TargetFlags.Beneficial);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            var m = (Mobile) o;
             if (!Caster.CanSee(m))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -100,29 +98,6 @@ namespace Server.Spells.Third
             FinishSequence();
         }
 
-        private class InternalTarget : Target
-        {
-            private readonly BlessSpell m_Owner;
-            public InternalTarget(BlessSpell owner)
-                : base(10, false, TargetFlags.Beneficial)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                {
-                    m_Owner.Target((Mobile)o);
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
-        }
-
         private class InternalTimer : Timer
         {
             public Mobile Mobile { get; set; }
@@ -136,7 +111,7 @@ namespace Server.Spells.Third
 
             protected override void OnTick()
             {
-                BlessSpell.RemoveBless(Mobile);
+                RemoveBless(Mobile);
             }
         }
     }

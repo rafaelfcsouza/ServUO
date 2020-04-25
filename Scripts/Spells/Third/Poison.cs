@@ -17,13 +17,11 @@ namespace Server.Spells.Third
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<PoisonSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            var m = (Mobile) o;
             if (!Caster.CanSee(m))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -32,7 +30,7 @@ namespace Server.Spells.Third
             {
                 SpellHelper.Turn(Caster, m);
 
-                SpellHelper.CheckReflect((int)Circle, Caster, ref m);
+                SpellHelper.CheckReflect((int) Circle, Caster, ref m);
 
                 if (m.Spell != null)
                     m.Spell.OnCasterHurt();
@@ -51,7 +49,7 @@ namespace Server.Spells.Third
 
                     if (Caster.InRange(m, 8))
                     {
-                        int range = (int)Caster.GetDistanceToSqrt(m.Location);
+                        int range = (int) Caster.GetDistanceToSqrt(m.Location);
 
                         if (total >= 1000)
                             level = Utility.RandomDouble() <= .1 ? 4 : 3;
@@ -94,30 +92,6 @@ namespace Server.Spells.Third
             }
 
             FinishSequence();
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly PoisonSpell m_Owner;
-
-            public InternalTarget(PoisonSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                {
-                    m_Owner.Target((Mobile)o);
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

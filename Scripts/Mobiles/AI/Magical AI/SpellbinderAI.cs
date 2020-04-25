@@ -686,7 +686,7 @@ namespace Server.Mobiles
         {
             bool isDispel = (targ is DispelSpell.InternalTarget);
             bool isParalyze = (targ is ParalyzeSpell.InternalTarget);
-            bool isTeleport = (targ is TeleportSpell.InternalTarget);
+            bool isTeleport = (targ is SpellTarget<TeleportSpell, IPoint3D>);
             bool teleportAway = false;
 
             Mobile toTarget;

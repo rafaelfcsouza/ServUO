@@ -224,7 +224,7 @@ namespace Server.Regions
 
         public override bool OnTarget(Mobile m, Target t, object o)
         {
-            if (m.AccessLevel == AccessLevel.Player && t is Server.Spells.Third.TeleportSpell.InternalTarget)
+            if (m.AccessLevel == AccessLevel.Player && t is Spells.SpellTarget<Spells.Third.TeleportSpell, IPoint3D>)
             {
                 m.SendLocalizedMessage(501802); // that spell doesn't seem to work.
                 return false;

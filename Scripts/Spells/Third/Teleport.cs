@@ -29,13 +29,11 @@ namespace Server.Spells.Third
             return SpellHelper.CheckTravel(Caster, TravelCheckType.TeleportFrom);
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<TeleportSpell, IPoint3D>(this, TargetFlags.None);
 
-        public void Target(IPoint3D p)
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
             IPoint3D orig = p;
             Map map = Caster.Map;
 
@@ -99,29 +97,6 @@ namespace Server.Spells.Third
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly TeleportSpell m_Owner;
-            public InternalTarget(TeleportSpell owner)
-                : base(11, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                IPoint3D p = o as IPoint3D;
-
-                if (p != null)
-                    m_Owner.Target(p);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

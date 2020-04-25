@@ -4,7 +4,7 @@ using Server.Targeting;
 
 namespace Server.Spells
 {
-    public class SpellTarget<TSpell, TTarget> : Target where TSpell : Spell where TTarget: IEntity
+    public class SpellTarget<TSpell, TTarget> : Target where TSpell : Spell
     {
         protected readonly TSpell Spell;
 

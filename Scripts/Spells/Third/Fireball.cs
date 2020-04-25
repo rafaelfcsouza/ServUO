@@ -17,13 +17,12 @@ namespace Server.Spells.Third
 
         public override SpellCircle Circle => SpellCircle.Third;
         public override bool DelayedDamage => true;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(IDamageable m)
+        protected override Target CreateTarget() => new SpellTarget<FireballSpell, Mobile>(this, TargetFlags.Harmful);
+
+        public override void Target(object o)
         {
+            var m = (IDamageable) o;
             if (!Caster.CanSee(m))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -57,27 +56,6 @@ namespace Server.Spells.Third
             }
 
             FinishSequence();
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly FireballSpell m_Owner;
-            public InternalTarget(FireballSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is IDamageable)
-                    m_Owner.Target((IDamageable)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

@@ -1,4 +1,5 @@
 using Server.Items;
+using Server.Mobiles;
 using Server.Targeting;
 
 namespace Server.Spells.Third
@@ -11,18 +12,27 @@ namespace Server.Spells.Third
             9031,
             Reagent.Bloodmoss,
             Reagent.MandrakeRoot);
+
         public TelekinesisSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
         }
 
         public override SpellCircle Circle => SpellCircle.Third;
-        public override void OnCast()
+
+        protected override Target CreateTarget() => new TelekinesisTarget(this);
+
+        public override void Target(object o)
         {
-            Caster.Target = new InternalTarget(this);
+            if (o is Container container)
+                Target(container);
+            else if (o is ITelekinesisable telekinesisable)
+                Target(telekinesisable);
+            else
+                Caster.SendLocalizedMessage(501857); // This spell won't work on that!
         }
 
-        public void Target(ITelekinesisable obj)
+        private void Target(ITelekinesisable obj)
         {
             if (CheckSequence())
             {
@@ -34,7 +44,7 @@ namespace Server.Spells.Third
             FinishSequence();
         }
 
-        public void Target(Container item)
+        private void Target(Container item)
         {
             if (CheckSequence())
             {
@@ -53,7 +63,7 @@ namespace Server.Spells.Third
                 {
                     item.OnSnoop(Caster);
                 }
-                else if (item is Corpse && !((Corpse)item).CheckLoot(Caster, null))
+                else if (item is Corpse corpse && !corpse.CheckLoot(Caster, null))
                 {
                 }
                 else if (Caster.Region.OnDoubleClick(Caster, item))
@@ -68,28 +78,21 @@ namespace Server.Spells.Third
             FinishSequence();
         }
 
-        public class InternalTarget : Target
+        public class TelekinesisTarget : SpellTarget<TelekinesisSpell, Container>
         {
-            private readonly TelekinesisSpell m_Owner;
-            public InternalTarget(TelekinesisSpell owner)
-                : base(10, false, TargetFlags.None)
+            public TelekinesisTarget(TelekinesisSpell spell) : base(spell, TargetFlags.None)
             {
-                m_Owner = owner;
             }
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (o is ITelekinesisable && (!(o is Container) || !Siege.SiegeShard))
-                    m_Owner.Target((ITelekinesisable)o);
-                else if (o is Container && !Siege.SiegeShard)
-                    m_Owner.Target((Container)o);
+                if (from is PlayerMobile) Spell.Invoke(o);
+                else if (o is Container container)
+                    Spell.Target(container);
+                else if (o is ITelekinesisable telekinesisable)
+                    Spell.Target(telekinesisable);
                 else
                     from.SendLocalizedMessage(501857); // This spell won't work on that!
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

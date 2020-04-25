@@ -1,6 +1,8 @@
 using Server.Items;
+using Server.Mobiles;
 using Server.Network;
 using Server.Targeting;
+using Ultima;
 
 namespace Server.Spells.Third
 {
@@ -13,19 +15,19 @@ namespace Server.Spells.Third
             Reagent.Garlic,
             Reagent.Bloodmoss,
             Reagent.SulfurousAsh);
+
         public MagicLockSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
         }
 
         public override SpellCircle Circle => SpellCircle.Third;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(LockableContainer targ)
+        protected override Target CreateTarget() => new MagicLockTarget(this);
+
+        public override void Target(object o)
         {
+            LockableContainer targ = o as LockableContainer;
             if (Multis.BaseHouse.CheckLockedDownOrSecured(targ))
             {
                 // You cannot cast this on a locked down item.
@@ -58,26 +60,19 @@ namespace Server.Spells.Third
             FinishSequence();
         }
 
-        private class InternalTarget : Target
+        private class MagicLockTarget : SpellTarget<MagicLockSpell, LockableContainer>
         {
-            private readonly MagicLockSpell m_Owner;
-            public InternalTarget(MagicLockSpell owner)
-                : base(10, false, TargetFlags.None)
+            public MagicLockTarget(MagicLockSpell spell) : base(spell, TargetFlags.None)
             {
-                m_Owner = owner;
             }
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (o is LockableContainer)
-                    m_Owner.Target((LockableContainer)o);
+                if (from is PlayerMobile) Spell.Invoke(o);
+                else if (o is LockableContainer container)
+                    Spell.Target(container);
                 else
                     from.SendLocalizedMessage(501762); // Target must be an unlocked chest.
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }
