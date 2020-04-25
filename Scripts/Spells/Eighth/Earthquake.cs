@@ -1,4 +1,5 @@
 using System;
+using Server.Mobiles;
 
 namespace Server.Spells.Eighth
 {
@@ -16,6 +17,8 @@ namespace Server.Spells.Eighth
             Reagent.MandrakeRoot,
             Reagent.SulfurousAsh);
 
+        private bool _Casted;
+
         public EarthquakeSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
@@ -25,6 +28,13 @@ namespace Server.Spells.Eighth
         public override bool DelayedDamage => false;
         public override void OnCast()
         {
+            if (!_Casted && Caster is PlayerMobile)
+            {
+                _Casted = true;
+                Invoke();
+                return;
+            }
+
             if (SpellHelper.CheckTown(Caster, Caster) && CheckSequence())
             {
                 foreach (IDamageable id in AcquireIndirectTargets(Caster.Location, 1 + (int)(Caster.Skills[SkillName.Magery].Value / 15.0)))

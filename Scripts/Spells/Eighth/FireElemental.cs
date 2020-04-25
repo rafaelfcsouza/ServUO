@@ -14,6 +14,9 @@ namespace Server.Spells.Eighth
             Reagent.MandrakeRoot,
             Reagent.SpidersSilk,
             Reagent.SulfurousAsh);
+
+        private bool _Casted;
+
         public FireElementalSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
@@ -36,6 +39,13 @@ namespace Server.Spells.Eighth
 
         public override void OnCast()
         {
+            if (!_Casted && Caster is PlayerMobile)
+            {
+                _Casted = true;
+                Invoke();
+                return;
+            }
+
             if (CheckSequence())
             {
                 TimeSpan duration = TimeSpan.FromSeconds((2 * Caster.Skills.Magery.Fixed) / 5);

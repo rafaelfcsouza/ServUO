@@ -1281,7 +1281,7 @@ namespace Server.Mobiles
                 bool isDispel = (targ is SpellTarget<DispelSpell, Mobile> || targ is SpellTarget<MassDispelSpell, IPoint3D>);
                 bool isParalyze = (targ is SpellTarget<ParalyzeSpell, Mobile>);
                 bool isTeleport = (targ is SpellTarget<TeleportSpell, IPoint3D>);
-                bool isSummon = (targ is EnergyVortexSpell.InternalTarget || targ is BladeSpiritsSpell.BladeSpiritsSpellTarget ||
+                bool isSummon = (targ is EnergyVortexSpell.EnergyVortexSpellTarget || targ is BladeSpiritsSpell.BladeSpiritsSpellTarget ||
                                 targ is NatureFurySpell.InternalTarget);
                 bool isField = (targ is SpellTarget<FireFieldSpell, IPoint3D> || targ is SpellTarget<PoisonFieldSpell, IPoint3D> ||
                                targ is SpellTarget<ParalyzeFieldSpell, IPoint3D>);

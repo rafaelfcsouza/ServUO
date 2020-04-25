@@ -35,13 +35,12 @@ namespace Server.Spells.Eighth
             return true;
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new EnergyVortexSpellTarget(this);
 
-        public void Target(IPoint3D p)
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
+
             Map map = Caster.Map;
 
             SpellHelper.GetSurfaceTop(ref p);
@@ -58,34 +57,21 @@ namespace Server.Spells.Eighth
             FinishSequence();
         }
 
-        public class InternalTarget : Target
+        public class EnergyVortexSpellTarget : SpellTarget<EnergyVortexSpell, IPoint3D>
         {
-            private EnergyVortexSpell m_Owner;
-            public InternalTarget(EnergyVortexSpell owner)
-                : base(10, true, TargetFlags.None)
+            public EnergyVortexSpellTarget(EnergyVortexSpell owner)
+                : base(owner, TargetFlags.None)
             {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is IPoint3D)
-                    m_Owner.Target((IPoint3D)o);
             }
 
             protected override void OnTargetOutOfLOS(Mobile from, object o)
             {
                 from.SendLocalizedMessage(501943); // Target cannot be seen. Try again.
-                from.Target = new InternalTarget(m_Owner);
+                from.Target = Spell.CreateTarget();
                 from.Target.BeginTimeout(from, TimeoutTime - DateTime.UtcNow);
-                m_Owner = null;
+                Spell = null;
             }
 
-            protected override void OnTargetFinish(Mobile from)
-            {
-                if (m_Owner != null)
-                    m_Owner.FinishSequence();
-            }
         }
     }
 }
