@@ -20,13 +20,12 @@ namespace Server.Spells.Fifth
         }
 
         public override SpellCircle Circle => SpellCircle.Fifth;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(Mobile m)
+        protected override Target CreateTarget() => new SpellTarget<MindBlastSpell, Mobile>(this, TargetFlags.Harmful);
+
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (!Caster.CanSee(m))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -75,27 +74,6 @@ namespace Server.Spells.Fifth
                 target.PlaySound(0x213);
 
                 SpellHelper.Damage(this, target, Utility.RandomMinMax(damage, damage + 4), 0, 0, 100, 0, 0);
-            }
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly MindBlastSpell m_Owner;
-            public InternalTarget(MindBlastSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

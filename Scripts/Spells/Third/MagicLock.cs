@@ -68,11 +68,10 @@ namespace Server.Spells.Third
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (from is PlayerMobile) Spell.Invoke(o);
-                else if (o is LockableContainer container)
-                    Spell.Target(container);
-                else
-                    from.SendLocalizedMessage(501762); // Target must be an unlocked chest.
+                if (!(o is LockableContainer)) from.SendLocalizedMessage(501762); // Target must be an unlocked chest.
+                else if (from is PlayerMobile) Spell.Invoke(o);
+                else if (o is LockableContainer container) Spell.Target(container);
+
             }
         }
     }

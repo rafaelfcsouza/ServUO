@@ -1279,14 +1279,14 @@ namespace Server.Mobiles
             if (UsesMagery)
             {
                 bool isDispel = (targ is DispelSpell.InternalTarget || targ is MassDispelSpell.InternalTarget);
-                bool isParalyze = (targ is ParalyzeSpell.InternalTarget);
+                bool isParalyze = (targ is SpellTarget<ParalyzeSpell, Mobile>);
                 bool isTeleport = (targ is SpellTarget<TeleportSpell, IPoint3D>);
-                bool isSummon = (targ is EnergyVortexSpell.InternalTarget || targ is BladeSpiritsSpell.InternalTarget ||
+                bool isSummon = (targ is EnergyVortexSpell.InternalTarget || targ is BladeSpiritsSpell.BladeSpiritsSpellTarget ||
                                 targ is NatureFurySpell.InternalTarget);
-                bool isField = (targ is SpellTarget<FireFieldSpell, IPoint3D> || targ is PoisonFieldSpell.InternalTarget ||
+                bool isField = (targ is SpellTarget<FireFieldSpell, IPoint3D> || targ is SpellTarget<PoisonFieldSpell, IPoint3D> ||
                                targ is ParalyzeFieldSpell.InternalTarget);
                 bool isAnimate = (targ is AnimateDeadSpell.InternalTarget);
-                bool isDispelField = (targ is DispelFieldSpell.InternalTarget);
+                bool isDispelField = (targ is DispelFieldSpell.DispelFieldSpellTarget);
                 bool teleportAway = false;
 
                 if (isTeleport && m_Mobile.CanSwim)

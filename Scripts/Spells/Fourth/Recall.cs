@@ -1,3 +1,4 @@
+using Server.Engines.NewMagincia;
 using Server.Items;
 using Server.Mobiles;
 using Server.Multis;
@@ -173,9 +174,9 @@ namespace Server.Spells.Fourth
                     Caster.SendLocalizedMessage(501805); // That rune is not yet marked.
                 }
             }
-            else if (o is Runebook)
+            else if (o is Runebook runebook)
             {
-                RunebookEntry e = ((Runebook) o).Default;
+                RunebookEntry e = runebook.Default;
 
                 if (e != null)
                 {
@@ -193,19 +194,17 @@ namespace Server.Spells.Fourth
                     Caster.SendLocalizedMessage(502354); // Target is not marked.
                 }
             }
-            else if (o is Key && ((Key) o).KeyValue != 0 && ((Key) o).Link is BaseBoat)
+            else if (o is Key key && key.KeyValue != 0 && key.Link is BaseBoat)
             {
-                BaseBoat boat = ((Key) o).Link as BaseBoat;
+                BaseBoat boat = key.Link as BaseBoat;
 
-                if (!boat.Deleted && boat.CheckKey(((Key) o).KeyValue))
+                if (!boat.Deleted && boat.CheckKey(key.KeyValue))
                     Effect(boat.GetMarkedLocation(), boat.Map, false, true);
                 else
                     Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 502357, Caster.Name, "")); // I can not recall Caster that object.
             }
-            else if (o is Engines.NewMagincia.WritOfLease)
+            else if (o is WritOfLease lease)
             {
-                Engines.NewMagincia.WritOfLease lease = (Engines.NewMagincia.WritOfLease) o;
-
                 if (lease.RecallLoc != Point3D.Zero && lease.Facet != null && lease.Facet != Map.Internal)
                     Effect(lease.RecallLoc, lease.Facet, false);
                 else

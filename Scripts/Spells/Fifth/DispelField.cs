@@ -2,6 +2,7 @@ using Server.Items;
 using Server.Misc;
 using Server.Targeting;
 using System;
+using Server.Mobiles;
 
 namespace Server.Spells.Fifth
 {
@@ -15,20 +16,21 @@ namespace Server.Spells.Fifth
             Reagent.SpidersSilk,
             Reagent.SulfurousAsh,
             Reagent.Garlic);
+
         public DispelFieldSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
         }
 
         public override SpellCircle Circle => SpellCircle.Fifth;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(Item item)
+        protected override Target CreateTarget() => new DispelFieldSpellTarget(this);
+
+        public override void Target(object o)
         {
-            Type t = item.GetType();
+            Item item = o as Item;
+
+            Type t = item?.GetType();
 
             if (!Caster.CanSee(item))
             {
@@ -38,7 +40,7 @@ namespace Server.Spells.Fifth
             {
                 Caster.SendLocalizedMessage(1005049); // That cannot be dispelled.
             }
-            else if (item is Moongate && !((Moongate)item).Dispellable)
+            else if (item is Moongate moongate && !moongate.Dispellable)
             {
                 Caster.SendLocalizedMessage(1005047); // That magic is too chaotic
             }
@@ -55,30 +57,21 @@ namespace Server.Spells.Fifth
             FinishSequence();
         }
 
-        public class InternalTarget : Target
+        public class DispelFieldSpellTarget : SpellTarget<DispelFieldSpell, Item>
         {
-            private readonly DispelFieldSpell m_Owner;
-            public InternalTarget(DispelFieldSpell owner)
-                : base(10, false, TargetFlags.None)
+            public DispelFieldSpellTarget(DispelFieldSpell owner)
+                : base(owner, TargetFlags.None)
             {
-                m_Owner = owner;
             }
 
             protected override void OnTarget(Mobile from, object o)
             {
-                if (o is Item)
+                if (!(o is Item)) Spell.Caster.SendLocalizedMessage(1005049); // That cannot be dispelled.
+                else if (Spell.Caster is PlayerMobile) Spell.Invoke(o);
+                else if (o is Item item)
                 {
-                    m_Owner.Target((Item)o);
+                    Spell.Target(item);
                 }
-                else
-                {
-                    m_Owner.Caster.SendLocalizedMessage(1005049); // That cannot be dispelled.
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

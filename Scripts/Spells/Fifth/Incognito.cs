@@ -15,7 +15,7 @@ namespace Server.Spells.Fifth
             Reagent.Bloodmoss,
             Reagent.Garlic,
             Reagent.Nightshade);
-        private static readonly Hashtable m_Timers = new Hashtable();
+        private static readonly Hashtable _Timers = new Hashtable();
         private static readonly int[] m_HairIDs = new int[]
         {
             0x2044, 0x2045, 0x2046,
@@ -29,6 +29,9 @@ namespace Server.Spells.Fifth
             0x2041, 0x204B, 0x204C,
             0x204D, 0x0000
         };
+
+        private bool _Casted;
+
         public IncognitoSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
@@ -37,12 +40,12 @@ namespace Server.Spells.Fifth
         public override SpellCircle Circle => SpellCircle.Fifth;
         public static bool StopTimer(Mobile m)
         {
-            Timer t = (Timer)m_Timers[m];
+            Timer t = (Timer)_Timers[m];
 
             if (t != null)
             {
                 t.Stop();
-                m_Timers.Remove(m);
+                _Timers.Remove(m);
                 BuffInfo.RemoveBuff(m, BuffIcon.Incognito);
             }
 
@@ -67,6 +70,13 @@ namespace Server.Spells.Fifth
 
         public override void OnCast()
         {
+            if (!_Casted && Caster is PlayerMobile)
+            {
+                Invoke();
+                _Casted = true;
+                return;
+            }
+
             if (!Caster.CanBeginAction(typeof(IncognitoSpell)))
             {
                 Caster.SendLocalizedMessage(1005559); // This spell is already in effect.
@@ -118,7 +128,7 @@ namespace Server.Spells.Fifth
 
                     Timer t = new InternalTimer(Caster, length);
 
-                    m_Timers[Caster] = t;
+                    _Timers[Caster] = t;
 
                     t.Start();
 

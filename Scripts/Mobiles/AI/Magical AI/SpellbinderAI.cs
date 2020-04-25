@@ -685,7 +685,7 @@ namespace Server.Mobiles
         private void ProcessTarget(Target targ)
         {
             bool isDispel = (targ is DispelSpell.InternalTarget);
-            bool isParalyze = (targ is ParalyzeSpell.InternalTarget);
+            bool isParalyze = (targ is SpellTarget<ParalyzeSpell, Mobile>);
             bool isTeleport = (targ is SpellTarget<TeleportSpell, IPoint3D>);
             bool teleportAway = false;
 

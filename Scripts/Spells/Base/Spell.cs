@@ -1,4 +1,5 @@
 #region References
+
 using Server.Items;
 using Server.Misc;
 using Server.Mobiles;
@@ -16,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 #endregion
 
 namespace Server.Spells
@@ -46,6 +48,7 @@ namespace Server.Spells
         public virtual bool ShowHandMovement => true;
 
         public virtual bool DelayedDamage => false;
+
         public virtual Type[] DelayDamageFamily => null;
         // DelayDamageFamily can define spells so they don't stack, even though they are different spells
         // Right now, magic arrow and nether bolt are the only ones that have this functionality
@@ -157,21 +160,21 @@ namespace Server.Spells
         {
             if (d is BaseCreature)
             {
-                ((BaseCreature)d).OnHarmfulSpell(Caster);
+                ((BaseCreature) d).OnHarmfulSpell(Caster);
             }
             else if (d is IDamageableItem)
             {
-                ((IDamageableItem)d).OnHarmfulSpell(Caster);
+                ((IDamageableItem) d).OnHarmfulSpell(Caster);
             }
 
             NegativeAttributes.OnCombatAction(Caster);
 
             if (!(d is Mobile)) return;
 
-            if ((Mobile)d != Caster)
-                NegativeAttributes.OnCombatAction((Mobile)d);
+            if ((Mobile) d != Caster)
+                NegativeAttributes.OnCombatAction((Mobile) d);
 
-            EvilOmenSpell.TryEndEffect((Mobile)d);
+            EvilOmenSpell.TryEndEffect((Mobile) d);
         }
 
         public virtual int GetNewAosDamage(int bonus, int dice, int sides, IDamageable singleTarget)
@@ -208,7 +211,7 @@ namespace Server.Spells
 
             damage = AOS.Scale(damage, evalScale);
             damage = AOS.Scale(damage, 100 + damageBonus);
-            damage = AOS.Scale(damage, (int)(scalar * 100));
+            damage = AOS.Scale(damage, (int) (scalar * 100));
 
             return damage / 100;
         }
@@ -247,13 +250,14 @@ namespace Server.Spells
 
             if (o != null && o is double)
             {
-                if (((double)o) > Utility.RandomDouble() * 100.0)
+                if (((double) o) > Utility.RandomDouble() * 100.0)
                 {
                     disturb = false;
                 }
             }
 
             #region Stygian Abyss
+
             int focus = SAAbsorptionAttributes.GetValue(Caster, SAAbsorptionAttribute.CastingFocus);
 
             if (BaseFishPie.IsUnderEffects(Caster, FishPieEffect.CastFocus))
@@ -291,6 +295,7 @@ namespace Server.Spells
                 if (res > Utility.Random(100))
                     disturb = false;
             }
+
             #endregion
 
             return disturb;
@@ -311,9 +316,9 @@ namespace Server.Spells
         /// </summary>
         /// <param name="d"></param>
         /// <returns></returns>
-		public virtual bool OnCasterMoving(Direction d)
+        public virtual bool OnCasterMoving(Direction d)
         {
-            if (IsCasting && BlocksMovement && (!(Caster is BaseCreature) || ((BaseCreature)Caster).FreezeOnCast))
+            if (IsCasting && BlocksMovement && (!(Caster is BaseCreature) || ((BaseCreature) Caster).FreezeOnCast))
             {
                 Caster.SendLocalizedMessage(500111); // You are frozen and can not move.
                 return false;
@@ -426,12 +431,12 @@ namespace Server.Spells
 
             if (target is BaseCreature)
             {
-                ((BaseCreature)target).AlterDamageScalarFrom(Caster, ref scalar);
+                ((BaseCreature) target).AlterDamageScalarFrom(Caster, ref scalar);
             }
 
             if (Caster is BaseCreature)
             {
-                ((BaseCreature)Caster).AlterDamageScalarTo(target, ref scalar);
+                ((BaseCreature) Caster).AlterDamageScalarTo(target, ref scalar);
             }
 
             scalar *= GetSlayerDamageScalar(target);
@@ -543,7 +548,8 @@ namespace Server.Spells
             }
 
             if (State == SpellState.Casting)
-            {                State = SpellState.None;
+            {
+                State = SpellState.None;
                 Caster.Spell = null;
                 Caster.Delta(MobileDelta.Flags);
 
@@ -564,10 +570,11 @@ namespace Server.Spells
                     DoHurtFizzle();
                 }
 
-                Caster.NextSpellTime = Core.TickCount + (int)GetDisturbRecovery().TotalMilliseconds;
+                Caster.NextSpellTime = Core.TickCount + (int) GetDisturbRecovery().TotalMilliseconds;
             }
             else if (State == SpellState.Sequencing)
-            {                State = SpellState.None;
+            {
+                State = SpellState.None;
                 Caster.Spell = null;
                 Caster.Delta(MobileDelta.Flags);
 
@@ -599,11 +606,13 @@ namespace Server.Spells
         public virtual bool CheckCast()
         {
             #region High Seas
+
             if (Server.Multis.BaseBoat.IsDriving(Caster) && Caster.AccessLevel == AccessLevel.Player)
             {
                 Caster.SendLocalizedMessage(1049616); // You are too busy to do that at the moment.
                 return false;
             }
+
             #endregion
 
             return true;
@@ -648,7 +657,6 @@ namespace Server.Spells
 
             OnCast();
             return true;
-
         }
 
         private bool IsCastPossible()
@@ -683,13 +691,14 @@ namespace Server.Spells
             {
                 Caster.SendLocalizedMessage(502644); // You have not yet recovered from casting a spell.
             }
-            else if (Caster is PlayerMobile && ((PlayerMobile)Caster).PeacedUntil > DateTime.UtcNow)
+            else if (Caster is PlayerMobile && ((PlayerMobile) Caster).PeacedUntil > DateTime.UtcNow)
             {
                 Caster.SendLocalizedMessage(1072060); // You cannot cast a spell while calmed.
             }
             else if (Caster.Mana < ScaleMana(GetMana()))
             {
-                Caster.LocalOverheadMessage(MessageType.Regular, 0x22, 502625, ScaleMana(GetMana()).ToString()); // Insufficient mana. You must have at least ~1_MANA_REQUIREMENT~ Mana to use this spell.
+                Caster.LocalOverheadMessage(MessageType.Regular, 0x22, 502625,
+                    ScaleMana(GetMana()).ToString()); // Insufficient mana. You must have at least ~1_MANA_REQUIREMENT~ Mana to use this spell.
             }
             else if (Caster.Race == Race.Gargoyle && Caster.Flying && BaseMount.OnFlightPath(Caster))
             {
@@ -712,15 +721,17 @@ namespace Server.Spells
             Invoke();
         }
 
-        public virtual void Target(object o) { }
+        public virtual void Target(object o)
+        {
+        }
 
         protected bool Invoke()
         {
             StartCastTime = Core.TickCount;
 
-            if (Caster.Spell is Spell && ((Spell)Caster.Spell).State == SpellState.Sequencing)
+            if (Caster.Spell is Spell && ((Spell) Caster.Spell).State == SpellState.Sequencing)
             {
-                ((Spell)Caster.Spell).Disturb(DisturbType.NewCast);
+                ((Spell) Caster.Spell).Disturb(DisturbType.NewCast);
             }
 
             State = SpellState.Casting;
@@ -745,7 +756,7 @@ namespace Server.Spells
 
             if (ShowHandMovement && !(Scroll is SpellStone) && (Caster.Body.IsHuman || (Caster.Player && Caster.Body.IsMonster)))
             {
-                int count = (int)Math.Ceiling(castDelay.TotalSeconds / _AnimateDelay.TotalSeconds);
+                int count = (int) Math.Ceiling(castDelay.TotalSeconds / _AnimateDelay.TotalSeconds);
 
                 if (count != 0)
                 {
@@ -800,6 +811,7 @@ namespace Server.Spells
         }
 
         #region Enhanced Client
+
         public bool OnCastInstantTarget()
         {
             if (InstantTarget == null)
@@ -836,6 +848,7 @@ namespace Server.Spells
 
             return false;
         }
+
         #endregion
 
         public virtual void OnBeginCast()
@@ -844,7 +857,8 @@ namespace Server.Spells
         }
 
         public virtual void SendCastEffect()
-        { }
+        {
+        }
 
         public virtual void GetCastSkills(out double min, out double max)
         {
@@ -904,9 +918,9 @@ namespace Server.Spells
 
             lmc += BaseArmor.GetInherentLowerManaCost(Caster);
 
-            scalar -= (double)lmc / 100;
+            scalar -= (double) lmc / 100;
 
-            return (int)(mana * scalar);
+            return (int) (mana * scalar);
         }
 
         public virtual TimeSpan GetDisturbRecovery()
@@ -932,7 +946,7 @@ namespace Server.Spells
                 delay = CastRecoveryMinimum;
             }
 
-            return TimeSpan.FromSeconds((double)delay / CastRecoveryPerSecond);
+            return TimeSpan.FromSeconds((double) delay / CastRecoveryPerSecond);
         }
 
         public abstract TimeSpan CastDelayBase { get; }
@@ -1029,15 +1043,15 @@ namespace Server.Spells
                 DoFizzle();
             }
             else if (PreTarget != null
-                && PreTarget != Caster
-                && (!Caster.CanSee(PreTarget) || !Caster.InLOS(PreTarget) || !Caster.InRange(PreTarget, 15)))
+                     && PreTarget != Caster
+                     && (!Caster.CanSee(PreTarget) || !Caster.InLOS(PreTarget) || !Caster.InRange(PreTarget, 15)))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
                 DoFizzle();
             }
             else if (Scroll != null && !(Scroll is Runebook) &&
                      (Scroll.Amount <= 0 || Scroll.Deleted || Scroll.RootParent != Caster ||
-                      (Scroll is BaseWand && (((BaseWand)Scroll).Charges <= 0 || Scroll.Parent != Caster))))
+                      (Scroll is BaseWand && (((BaseWand) Scroll).Charges <= 0 || Scroll.Parent != Caster))))
             {
                 DoFizzle();
             }
@@ -1054,7 +1068,7 @@ namespace Server.Spells
                 Caster.SendLocalizedMessage(502646); // You cannot cast a spell while frozen.
                 DoFizzle();
             }
-            else if (Caster is PlayerMobile && ((PlayerMobile)Caster).PeacedUntil > DateTime.UtcNow)
+            else if (Caster is PlayerMobile && ((PlayerMobile) Caster).PeacedUntil > DateTime.UtcNow)
             {
                 Caster.SendLocalizedMessage(1072060); // You cannot cast a spell while calmed.
                 DoFizzle();
@@ -1065,7 +1079,7 @@ namespace Server.Spells
 
                 if (Scroll is SpellStone)
                 {
-                    ((SpellStone)Scroll).Use(Caster);
+                    ((SpellStone) Scroll).Use(Caster);
                 }
 
                 if (Scroll is SpellScroll)
@@ -1075,7 +1089,7 @@ namespace Server.Spells
 
                 else if (Scroll is BaseWand)
                 {
-                    ((BaseWand)Scroll).ConsumeCharge(Caster);
+                    ((BaseWand) Scroll).ConsumeCharge(Caster);
                     Caster.RevealingAction();
                 }
 
@@ -1162,7 +1176,7 @@ namespace Server.Spells
 
         public bool CheckHSequence(IDamageable target)
         {
-            if (!target.Alive || (target is IDamageableItem && !((IDamageableItem)target).CanDamage))
+            if (!target.Alive || (target is IDamageableItem && !((IDamageableItem) target).CanDamage))
             {
                 Caster.SendLocalizedMessage(501857); // This spell won't work on that!
                 return false;
@@ -1264,7 +1278,7 @@ namespace Server.Spells
                         m_Spell.Caster.Region.OnSpellCast(m_Spell.Caster, m_Spell);
                     }
 
-                    m_Spell.Caster.NextSpellTime = Core.TickCount + (int)m_Spell.GetCastRecovery().TotalMilliseconds;
+                    m_Spell.Caster.NextSpellTime = Core.TickCount + (int) m_Spell.GetCastRecovery().TotalMilliseconds;
 
                     Target originalTarget = m_Spell.Caster.Target;
 
@@ -1301,7 +1315,8 @@ namespace Server.Spells
                 }
             }
             catch
-            { }
+            {
+            }
         }
     }
 }

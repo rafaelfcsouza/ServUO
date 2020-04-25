@@ -34,6 +34,9 @@ namespace Server.Spells.Fifth
             typeof(Hind),
             typeof(Rabbit)
         };
+
+        private bool _Casted;
+
         public SummonCreatureSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
@@ -56,6 +59,13 @@ namespace Server.Spells.Fifth
 
         public override void OnCast()
         {
+            if (!_Casted && Caster is PlayerMobile)
+            {
+                Invoke();
+                _Casted = true;
+                return;
+            }
+
             if (CheckSequence())
             {
                 try

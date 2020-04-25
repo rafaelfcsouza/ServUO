@@ -6,7 +6,7 @@ namespace Server.Spells
 {
     public class SpellTarget<TSpell, TTarget> : Target where TSpell : Spell
     {
-        protected readonly TSpell Spell;
+        protected TSpell Spell;
 
         public SpellTarget(TSpell spell, TargetFlags flag)
             : base(10, false, flag)
