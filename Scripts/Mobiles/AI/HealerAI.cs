@@ -34,7 +34,7 @@ namespace Server.Mobiles
 
             if (targ != null)
             {
-                if (targ is CureSpell.InternalTarget)
+                if (targ is SpellTarget<CureSpell, Mobile>)
                 {
                     ProcessTarget(targ, m_ACure);
                 }

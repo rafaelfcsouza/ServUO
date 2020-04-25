@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using Server.Mobiles;
 using Server.Targeting;
 
@@ -7,7 +8,6 @@ namespace Server.Spells.Second
 {
     public class ProtectionSpell : MagerySpell
     {
-        private static readonly Hashtable m_Registry = new Hashtable();
         private static readonly SpellInfo m_Info = new SpellInfo(
             "Protection", "Uus Sanct",
             236,
@@ -15,15 +15,20 @@ namespace Server.Spells.Second
             Reagent.Garlic,
             Reagent.Ginseng,
             Reagent.SulfurousAsh);
-        private static readonly Hashtable m_Table = new Hashtable();
+
+        public static Dictionary<Mobile, double> Registry { get; } = new Dictionary<Mobile, double>();
+
+        private static readonly Dictionary<Mobile, object> _ModsTable = new Dictionary<Mobile, object>();
+        private static readonly Dictionary<Mobile, InternalTimer> _TimerTable = new Dictionary<Mobile, InternalTimer>();
+
+        public override SpellCircle Circle => SpellCircle.Second;
+
         public ProtectionSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
         }
 
-        public static Hashtable Registry => m_Registry;
-        public override SpellCircle Circle => SpellCircle.Second;
-        public static void Toggle(Mobile caster, Mobile target, bool archprotection)
+        public static void StartProtection(Mobile caster, Mobile target, bool archprotection)
         {
             /* Players under the protection spell effect can no longer have their spells "disrupted" when hit.
             * Players under the protection spell have decreased physical resistance stat value (-15 + (Inscription/20),
@@ -33,57 +38,46 @@ namespace Server.Spells.Second
             * Reactive Armor, Protection, and Magic Reflection will stay on—even after logging out,
             * even after dying—until you “turn them off” by casting them again.
             */
-            object[] mods = (object[])m_Table[target];
 
-            if (mods == null)
+            target.PlaySound(0x1E9);
+            target.FixedParticles(0x375A, 9, 20, 5016, EffectLayer.Waist);
+
+            var mods = new object[]
             {
-                target.PlaySound(0x1E9);
-                target.FixedParticles(0x375A, 9, 20, 5016, EffectLayer.Waist);
+                new ResistanceMod(ResistanceType.Physical, -15 + Math.Min((int) (caster.Skills[SkillName.Inscribe].Value / 20), 15)),
+                new DefaultSkillMod(SkillName.MagicResist, true, -35 + Math.Min((int) (caster.Skills[SkillName.Inscribe].Value / 20), 35))
+            };
 
-                mods = new object[2]
-                {
-                    new ResistanceMod(ResistanceType.Physical, -15 + Math.Min((int)(caster.Skills[SkillName.Inscribe].Value / 20), 15)),
-                    new DefaultSkillMod(SkillName.MagicResist, true, -35 + Math.Min((int)(caster.Skills[SkillName.Inscribe].Value / 20), 35))
-                };
+            _ModsTable[target] = mods;
+            Registry[target] = 100.0;
 
-                m_Table[target] = mods;
-                Registry[target] = 100.0;
+            target.AddResistanceMod((ResistanceMod) mods[0]);
+            target.AddSkillMod((SkillMod) mods[1]);
 
-                target.AddResistanceMod((ResistanceMod)mods[0]);
-                target.AddSkillMod((SkillMod)mods[1]);
+            int physloss = -15 + (int) (caster.Skills[SkillName.Inscribe].Value / 20);
+            int resistloss = -35 + (int) (caster.Skills[SkillName.Inscribe].Value / 20);
+            string args = String.Format("{0}\t{1}", physloss, resistloss);
+            BuffInfo.AddBuff(target, new BuffInfo(archprotection ? BuffIcon.ArchProtection : BuffIcon.Protection, archprotection ? 1075816 : 1075814, 1075815, args.ToString()));
 
-                int physloss = -15 + (int)(caster.Skills[SkillName.Inscribe].Value / 20);
-                int resistloss = -35 + (int)(caster.Skills[SkillName.Inscribe].Value / 20);
-                string args = String.Format("{0}\t{1}", physloss, resistloss);
-                BuffInfo.AddBuff(target, new BuffInfo(archprotection ? BuffIcon.ArchProtection : BuffIcon.Protection, archprotection ? 1075816 : 1075814, 1075815, args.ToString()));
-            }
-            else
-            {
-                target.PlaySound(0x1ED);
-                target.FixedParticles(0x375A, 9, 20, 5016, EffectLayer.Waist);
-
-                m_Table.Remove(target);
-                Registry.Remove(target);
-
-                target.RemoveResistanceMod((ResistanceMod)mods[0]);
-                target.RemoveSkillMod((SkillMod)mods[1]);
-
-                BuffInfo.RemoveBuff(target, BuffIcon.Protection);
-                BuffInfo.RemoveBuff(target, BuffIcon.ArchProtection);
-            }
+            _TimerTable[target] = new InternalTimer(caster);
         }
 
         public static void EndProtection(Mobile m)
         {
-            if (m_Table.Contains(m))
+            if (_TimerTable.ContainsKey(m))
             {
-                object[] mods = (object[])m_Table[m];
+                // m.PlaySound(0x1ED);
+                // m.FixedParticles(0x375A, 9, 20, 5016, EffectLayer.Waist);
 
-                m_Table.Remove(m);
+                object[] mods = (object[]) _ModsTable[m];
+
                 Registry.Remove(m);
 
-                m.RemoveResistanceMod((ResistanceMod)mods[0]);
-                m.RemoveSkillMod((SkillMod)mods[1]);
+                _ModsTable.Remove(m);
+                _TimerTable.Remove(m);
+
+                m.RemoveResistanceMod((ResistanceMod) mods[0]);
+                m.RemoveSkillMod((SkillMod) mods[1]);
 
                 BuffInfo.RemoveBuff(m, BuffIcon.Protection);
                 BuffInfo.RemoveBuff(m, BuffIcon.ArchProtection);
@@ -102,34 +96,36 @@ namespace Server.Spells.Second
                 if (PreTarget != null)
                 {
                     if (CheckSequence())
-                        Toggle(Caster, (Mobile) PreTarget, false);
+                        StartProtection(Caster, (Mobile) PreTarget, false);
 
                     FinishSequence();
                 }
-                else Caster.Target = new InternalTarget(this);
+                else Caster.Target = new SpellTarget<ProtectionSpell, Mobile>(this, TargetFlags.Beneficial);
             }
             else
             {
                 if (CheckSequence())
-                    Toggle(Caster, Caster, false);
+                    StartProtection(Caster, Caster, false);
 
                 FinishSequence();
             }
-
         }
 
         #region SA
+
         public static bool HasProtection(Mobile m)
         {
-            return m_Table.ContainsKey(m);
+            return _ModsTable.ContainsKey(m);
         }
+
         #endregion
 
         private class InternalTimer : Timer
         {
             private readonly Mobile m_Caster;
+
             public InternalTimer(Mobile caster)
-                : base(TimeSpan.FromSeconds(0))
+                : base(TimeSpan.Zero)
             {
                 double val = caster.Skills[SkillName.Magery].Value * 2.0;
                 if (val < 15)
@@ -140,37 +136,12 @@ namespace Server.Spells.Second
                 m_Caster = caster;
                 Delay = TimeSpan.FromSeconds(val);
                 Priority = TimerPriority.OneSecond;
+                Start();
             }
 
             protected override void OnTick()
             {
-                ProtectionSpell.Registry.Remove(m_Caster);
-                DefensiveSpell.Nullify(m_Caster);
-            }
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly ProtectionSpell m_Owner;
-
-            public InternalTarget(ProtectionSpell owner)
-                : base(10, false, TargetFlags.Beneficial)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (!(o is Mobile)) return;
-                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                if (!(m_Owner.Caster is PlayerMobile))
-                {
-                    m_Owner.FinishSequence();
-                }
+                EndProtection(m_Caster);
             }
         }
     }

@@ -790,7 +790,7 @@ namespace Server.Spells
 
         public virtual void OnCast()
         {
-            if (PreTarget != null) Target((Mobile) PreTarget);
+            if (PreTarget != null) Target(PreTarget);
             else Caster.Target = CreateTarget();
         }
 

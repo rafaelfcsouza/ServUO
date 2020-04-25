@@ -1,29 +1,31 @@
+using System;
 using Server.Mobiles;
 using Server.Targeting;
 
 namespace Server.Spells
 {
-    public class SpellTarget<S, T> : Target where S: Spell where T: IEntity
+    public class SpellTarget<TSpell, TTarget> : Target where TSpell : Spell where TTarget: IEntity
     {
-        private readonly S _Spell;
-        public SpellTarget(S spell, TargetFlags flag)
+        protected readonly TSpell Spell;
+
+        public SpellTarget(TSpell spell, TargetFlags flag)
             : base(10, false, flag)
         {
-            _Spell = spell;
+            Spell = spell;
         }
 
         protected override void OnTarget(Mobile from, object o)
         {
-            if (!(o is T)) return;
-            if (_Spell.Caster is PlayerMobile) _Spell.Invoke(o);
-            else _Spell.Target((T) o);
+            if (!(o is TTarget)) return;
+            if (Spell.Caster is PlayerMobile) Spell.Invoke(o);
+            else Spell.Target(o);
         }
 
         protected override void OnTargetFinish(Mobile from)
         {
-            if (!(_Spell.Caster is PlayerMobile))
+            if (!(Spell.Caster is PlayerMobile))
             {
-                _Spell.FinishSequence();
+                Spell.FinishSequence();
             }
         }
     }

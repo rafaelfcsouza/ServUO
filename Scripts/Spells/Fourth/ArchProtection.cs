@@ -64,7 +64,7 @@ namespace Server.Spells.Fourth
                     if (m == Caster || (party != null && party.Contains(m)))
                     {
                         Caster.DoBeneficial(m);
-                        Spells.Second.ProtectionSpell.Toggle(Caster, m, true);
+                        Spells.Second.ProtectionSpell.StartProtection(Caster, m, true);
                     }
                 }
             }

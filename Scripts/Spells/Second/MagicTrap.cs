@@ -1,3 +1,4 @@
+using System;
 using Server.Items;
 using Server.Mobiles;
 using Server.Targeting;
@@ -13,20 +14,19 @@ namespace Server.Spells.Second
             Reagent.Garlic,
             Reagent.SpidersSilk,
             Reagent.SulfurousAsh);
+
         public MagicTrapSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
         }
 
         public override SpellCircle Circle => SpellCircle.Second;
-        public override void OnCast()
-        {
-            if (PreTarget != null) Target((TrapableContainer)PreTarget);
-            else Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(TrapableContainer item)
+        protected override Target CreateTarget() => new MagicTrapTarget(this);
+
+        public override void Target(object o)
         {
+            var item = (TrapableContainer) o;
             if (!Caster.CanSee(item))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -57,13 +57,10 @@ namespace Server.Spells.Second
             FinishSequence();
         }
 
-        private class InternalTarget : Target
+        private class MagicTrapTarget : SpellTarget<MagicTrapSpell, Mobile>
         {
-            private readonly MagicTrapSpell m_Owner;
-            public InternalTarget(MagicTrapSpell owner)
-                : base(10, false, TargetFlags.None)
+            public MagicTrapTarget(MagicTrapSpell magicTrapSpell) : base(magicTrapSpell, TargetFlags.None)
             {
-                m_Owner = owner;
             }
 
             protected override void OnTarget(Mobile from, object o)
@@ -74,16 +71,8 @@ namespace Server.Spells.Second
                     return;
                 }
 
-                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
-                else m_Owner.Target((TrapableContainer) o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                if (!(m_Owner.Caster is PlayerMobile))
-                {
-                    m_Owner.FinishSequence();
-                }
+                if (Spell.Caster is PlayerMobile) Spell.Invoke(o);
+                else Spell.Target((TrapableContainer) o);
             }
         }
     }

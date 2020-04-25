@@ -18,19 +18,17 @@ namespace Server.Spells.Second
 
         public override SpellCircle Circle => SpellCircle.Second;
         public override bool DelayedDamage => false;
-        public override void OnCast()
-        {
-            if (PreTarget != null) Target((IDamageable)PreTarget);
-            else Caster.Target = new InternalTarget(this);
-        }
+
+        protected override Target CreateTarget() => new SpellTarget<HarmSpell, Mobile>(this, TargetFlags.Harmful);
 
         public override double GetSlayerDamageScalar(Mobile target)
         {
             return 1.0; //This spell isn't affected by slayer spellbooks
         }
 
-        public void Target(IDamageable m)
+        public override void Target(object o)
         {
+            IDamageable m = o as IDamageable;
             Mobile mob = m as Mobile;
 
             if (!Caster.CanSee(m))
@@ -69,31 +67,6 @@ namespace Server.Spells.Second
             }
 
             FinishSequence();
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly HarmSpell m_Owner;
-            public InternalTarget(HarmSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (!(o is IDamageable)) return;
-                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
-                else m_Owner.Target((IDamageable) o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                if (!(m_Owner.Caster is PlayerMobile))
-                {
-                    m_Owner.FinishSequence();
-                }
-            }
         }
     }
 }

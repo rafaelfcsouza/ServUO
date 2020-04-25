@@ -18,11 +18,8 @@ namespace Server.Spells.Second
         }
 
         public override SpellCircle Circle => SpellCircle.Second;
-        public override void OnCast()
-        {
-            if (PreTarget != null) Target((TrapableContainer)PreTarget);
-            else Caster.Target = new InternalTarget(this);
-        }
+
+        protected override Target CreateTarget() => new RemoveTrapTarget(this);
 
         public void Target(TrapableContainer item)
         {
@@ -51,14 +48,9 @@ namespace Server.Spells.Second
             FinishSequence();
         }
 
-        private class InternalTarget : Target
+        private class RemoveTrapTarget : SpellTarget<RemoveTrapSpell, Mobile>
         {
-            private readonly RemoveTrapSpell m_Owner;
-            public InternalTarget(RemoveTrapSpell owner)
-                : base(10, false, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
+            public RemoveTrapTarget(RemoveTrapSpell removeTrap) : base(removeTrap, TargetFlags.None) { }
 
             protected override void OnTarget(Mobile from, object o)
             {
@@ -68,16 +60,8 @@ namespace Server.Spells.Second
                     return;
                 }
 
-                if (m_Owner.Caster is PlayerMobile) m_Owner.Invoke(o);
-                else m_Owner.Target((TrapableContainer) o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                if (!(m_Owner.Caster is PlayerMobile))
-                {
-                    m_Owner.FinishSequence();
-                }
+                if (Spell.Caster is PlayerMobile) Spell.Invoke(o);
+                else Spell.Target((TrapableContainer) o);
             }
         }
     }

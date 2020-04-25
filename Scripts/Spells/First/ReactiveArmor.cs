@@ -80,7 +80,7 @@ namespace Server.Spells.First
                 BuffInfo.AddBuff(targ, new BuffInfo(BuffIcon.ReactiveArmor, 1075812, 1075813, args.ToString()));
 
                 TimeSpan length = SpellHelper.GetDuration(Caster, targ);
-                _TimerTable[targ] = new InternalTimer(targ, TimeSpan.FromSeconds(10)); //length + TimeSpan.FromMilliseconds(50));
+                _TimerTable[targ] = new InternalTimer(targ, length + TimeSpan.FromMilliseconds(50));
             }
 
             FinishSequence();
