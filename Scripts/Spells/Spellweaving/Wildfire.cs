@@ -22,13 +22,12 @@ namespace Server.Spells.Spellweaving
         public override TimeSpan CastDelayBase => TimeSpan.FromSeconds(2.5);
         public override double RequiredSkill => 66.0;
         public override int RequiredMana => 50;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(Point3D p)
+        protected override Target CreateTarget() => new SpellTarget<WildfireSpell, IPoint3D>(this, TargetFlags.None);
+
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
             if (!Caster.CanSee(p))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -99,40 +98,17 @@ namespace Server.Spells.Spellweaving
             ColUtility.Free(mobiles);
         }
 
-        public class InternalTarget : Target
-        {
-            private readonly WildfireSpell m_Owner;
-            public InternalTarget(WildfireSpell owner)
-                : base(12, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile m, object o)
-            {
-                if (o is IPoint3D)
-                {
-                    m_Owner.Target(new Point3D((IPoint3D)o));
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile m)
-            {
-                m_Owner.FinishSequence();
-            }
-        }
-
         public class InternalTimer : Timer
         {
             private readonly Spell m_Spell;
             private readonly Mobile m_Owner;
-            private readonly Point3D m_Location;
+            private readonly IPoint3D m_Location;
             private readonly int m_Damage;
             private readonly int m_Range;
             private int m_LifeSpan;
             private readonly Map m_Map;
 
-            public InternalTimer(Spell spell, Mobile owner, Point3D location, int damage, int range, int duration)
+            public InternalTimer(Spell spell, Mobile owner, IPoint3D location, int damage, int range, int duration)
                 : base(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), duration)
             {
                 m_Spell = spell;

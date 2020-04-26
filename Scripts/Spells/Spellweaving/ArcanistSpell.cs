@@ -23,6 +23,8 @@ namespace Server.Spells.Spellweaving
         public override bool ClearHandsOnCast => false;
         public virtual int FocusLevel => m_CastTimeFocusLevel;
 
+        protected override bool UsesTarget => false;
+
         public static int GetFocusLevel(Mobile from)
         {
             ArcaneFocus focus = FindArcaneFocus(from);

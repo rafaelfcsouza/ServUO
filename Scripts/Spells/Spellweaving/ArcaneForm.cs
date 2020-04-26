@@ -15,6 +15,9 @@ namespace Server.Spells.Spellweaving
         public virtual int PoisResistOffset => 0;
         public virtual int NrgyResistOffset => 0;
         public virtual double TickRate => 1.0;
+
+        protected override bool UsesTarget => false;
+
         public override bool CheckCast()
         {
             if (!TransformationSpellHelper.CheckCast(Caster, this))

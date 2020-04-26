@@ -11,6 +11,9 @@ namespace Server.Spells.Spellweaving
         }
 
         public abstract int Sound { get; }
+
+        protected override bool UsesTarget => false;
+
         public override bool CheckCast()
         {
             if (!base.CheckCast())

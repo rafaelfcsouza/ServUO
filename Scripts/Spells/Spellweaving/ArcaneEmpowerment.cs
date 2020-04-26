@@ -18,6 +18,8 @@ namespace Server.Spells.Spellweaving
         public override double RequiredSkill => 24.0;
         public override int RequiredMana => 50;
 
+        protected override bool UsesTarget => false;
+
         public static double GetDispellBonus(Mobile m)
         {
             EmpowermentInfo info = m_Table[m] as EmpowermentInfo;

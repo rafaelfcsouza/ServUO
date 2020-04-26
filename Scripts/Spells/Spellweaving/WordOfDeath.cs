@@ -14,13 +14,12 @@ namespace Server.Spells.Spellweaving
         public override TimeSpan CastDelayBase => TimeSpan.FromSeconds(3.5);
         public override double RequiredSkill => 83.0;
         public override int RequiredMana => 50;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(Mobile m)
+        protected override Target CreateTarget() => new SpellTarget<WordOfDeathSpell, Mobile>(this, TargetFlags.Harmful);
+
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (!Caster.CanSee(m))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -62,29 +61,6 @@ namespace Server.Spells.Spellweaving
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly WordOfDeathSpell m_Owner;
-            public InternalTarget(WordOfDeathSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile m, object o)
-            {
-                if (o is Mobile)
-                {
-                    m_Owner.Target((Mobile)o);
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile m)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

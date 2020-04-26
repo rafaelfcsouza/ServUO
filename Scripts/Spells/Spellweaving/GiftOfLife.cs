@@ -65,13 +65,11 @@ namespace Server.Spells.Spellweaving
             HandleDeath_OnCallback(m);
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new GiftOfLifeSpellTarget(this);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             BaseCreature bc = m as BaseCreature;
 
             if (!Caster.CanSee(m))
@@ -167,31 +165,23 @@ namespace Server.Spells.Spellweaving
             }
         }
 
-        public class InternalTarget : Target
+        public class GiftOfLifeSpellTarget : SpellTarget<GiftOfLifeSpell, BaseCreature>
         {
-            private readonly GiftOfLifeSpell m_Owner;
 
-            public InternalTarget(GiftOfLifeSpell owner)
-                : base(10, false, TargetFlags.Beneficial)
+            public GiftOfLifeSpellTarget(GiftOfLifeSpell owner)
+                : base(owner, TargetFlags.Beneficial)
             {
-                m_Owner = owner;
             }
 
             protected override void OnTarget(Mobile m, object o)
             {
-                if (o is Mobile)
-                {
-                    m_Owner.Target((Mobile)o);
-                }
-                else
+                if (!(o is BaseCreature))
                 {
                     m.SendLocalizedMessage(1072077); // You may only cast this spell on yourself or a bonded pet.
+                    return;
                 }
-            }
-
-            protected override void OnTargetFinish(Mobile m)
-            {
-                m_Owner.FinishSequence();
+                if (Spell.Caster is PlayerMobile) Spell.Invoke(o);
+                else Spell.Target(o);
             }
         }
 

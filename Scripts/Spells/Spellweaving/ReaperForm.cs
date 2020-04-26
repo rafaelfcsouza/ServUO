@@ -22,6 +22,8 @@ namespace Server.Spells.Spellweaving
         public virtual int SwingSpeedBonus => 10 + FocusLevel;
         public virtual int SpellDamageBonus => 10 + FocusLevel;
 
+        protected override bool UsesTarget => false;
+
         public override void DoEffect(Mobile m)
         {
             m.PlaySound(0x1BA);

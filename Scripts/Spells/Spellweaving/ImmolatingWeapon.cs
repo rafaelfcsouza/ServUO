@@ -19,6 +19,9 @@ namespace Server.Spells.Spellweaving
         public override TimeSpan CastDelayBase => TimeSpan.FromSeconds(1.0);
         public override double RequiredSkill => 10.0;
         public override int RequiredMana => 32;
+
+        protected override bool UsesTarget => false;
+
         public static bool IsImmolating(Mobile m, BaseWeapon weapon)
         {
             if (m == null)

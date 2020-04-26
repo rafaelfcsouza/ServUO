@@ -31,13 +31,11 @@ namespace Server.Spells.Spellweaving
             return false;
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<DryadAllureSpell, BaseCreature>(this, TargetFlags.None);
 
-        public void Target(BaseCreature bc)
+        public override void Target(object o)
         {
+            BaseCreature bc = o as BaseCreature;
             if (!Caster.CanSee(bc.Location) || !Caster.InLOS(bc))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.
@@ -52,7 +50,7 @@ namespace Server.Spells.Spellweaving
             }
             else if (bc.Allured)
             {
-                Caster.SendLocalizedMessage(1074380); // This humanoid is already controlled by someone else.				
+                Caster.SendLocalizedMessage(1074380); // This humanoid is already controlled by someone else.
             }
             else if (CheckSequence())
             {
@@ -105,33 +103,6 @@ namespace Server.Spells.Spellweaving
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly DryadAllureSpell m_Owner;
-            public InternalTarget(DryadAllureSpell owner)
-                : base(12, false, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile m, object o)
-            {
-                if (o is BaseCreature)
-                {
-                    m_Owner.Target((BaseCreature)o);
-                }
-                else
-                {
-                    m.SendLocalizedMessage(1074379); // You cannot charm that!
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile m)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

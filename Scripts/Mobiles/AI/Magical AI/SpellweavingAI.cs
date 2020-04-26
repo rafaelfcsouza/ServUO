@@ -105,7 +105,7 @@ namespace Server.Mobiles
         {
             Targeting.Target t = m_Mobile.Target;
 
-            if (t is WildfireSpell.InternalTarget)
+            if (t is SpellTarget<WildfireSpell, IPoint3D>)
             {
                 if (m_Mobile.Combatant != null && m_Mobile.InRange(m_Mobile.Combatant.Location, 8))
                 {

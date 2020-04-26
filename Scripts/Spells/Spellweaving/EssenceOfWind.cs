@@ -19,6 +19,9 @@ namespace Server.Spells.Spellweaving
         public override TimeSpan CastDelayBase => TimeSpan.FromSeconds(3.0);
         public override double RequiredSkill => 52.0;
         public override int RequiredMana => 40;
+
+        protected override bool UsesTarget => false;
+
         public static int GetFCMalus(Mobile m)
         {
             EssenceOfWindInfo info;

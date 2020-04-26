@@ -20,6 +20,9 @@ namespace Server.Spells.Spellweaving
         public override TimeSpan CastDelayBase => TimeSpan.FromSeconds(0.5);
         public override double RequiredSkill => 0.0;
         public override int RequiredMana => 24;
+
+        protected override bool UsesTarget => false;
+
         public static bool IsValidTile(int itemID)
         {
             //Per OSI, Center tile only
@@ -82,7 +85,7 @@ namespace Server.Spells.Spellweaving
 
         private static bool IsValidLocation(Point3D location, Map map)
         {
-            LandTile lt = map.Tiles.GetLandTile(location.X, location.Y);         // Land   Tiles            
+            LandTile lt = map.Tiles.GetLandTile(location.X, location.Y);         // Land   Tiles
 
             if (IsValidTile(lt.ID) && lt.Z == location.Z)
                 return true;

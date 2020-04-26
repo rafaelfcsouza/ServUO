@@ -17,6 +17,9 @@ namespace Server.Spells.Spellweaving
         public override int RequiredMana => 32;
         public override int Body => 0x302;
         public override int Hue => 0x48F;
+
+        protected override bool UsesTarget => false;
+
         public static void Initialize()
         {
             EventSink.AggressiveAction += new AggressiveActionEventHandler(delegate (AggressiveActionEventArgs e)

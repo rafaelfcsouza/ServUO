@@ -1273,7 +1273,7 @@ namespace Server.Mobiles
                 return false;
 
             bool harmful = (targ.Flags & TargetFlags.Harmful) != 0 || targ is SpellTarget<HailStormSpell, IPoint3D> ||
-                          targ is WildfireSpell.InternalTarget;
+                          targ is SpellTarget<WildfireSpell, IPoint3D>;
             bool beneficial = (targ.Flags & TargetFlags.Beneficial) != 0 || targ is SpellTarget<ArchCureSpell, IPoint3D>;
 
             if (UsesMagery)
