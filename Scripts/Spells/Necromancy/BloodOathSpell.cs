@@ -46,13 +46,11 @@ namespace Server.Spells.Necromancy
             return oath;
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<BloodOathSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (Caster == m)
             {
                 Caster.SendLocalizedMessage(1060508); // You can't curse that.
@@ -84,7 +82,7 @@ namespace Server.Spells.Necromancy
             /* Temporarily creates a dark pact between the caster and the target.
                 * Any damage dealt by the target to the caster is increased, but the target receives the same amount of damage.
                 * The effect lasts for ((Spirit Speak skill level - target's Resist Magic skill level) / 80 ) + 8 seconds.
-                * 
+                *
                 * NOTE: The above algorithm must be fixed point, it should be:
                 * ((ss-rm)/8)+8
                 */
@@ -163,29 +161,6 @@ namespace Server.Spells.Necromancy
                 {
                     DoExpire();
                 }
-            }
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly BloodOathSpell m_Owner;
-            public InternalTarget(BloodOathSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-                else
-                    from.SendLocalizedMessage(1060508); // You can't curse that.
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

@@ -26,6 +26,9 @@ namespace Server.Spells.Necromancy
         public override int ColdResistOffset => 0;
         public override int PoisResistOffset => 0;
         public override int NrgyResistOffset => -5;
+
+        protected override bool UsesTarget => false;
+
         public override void DoEffect(Mobile m)
         {
             if (m is PlayerMobile)

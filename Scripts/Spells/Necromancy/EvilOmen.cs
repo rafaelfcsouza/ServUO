@@ -60,13 +60,11 @@ namespace Server.Spells.Necromancy
             return false;
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<EvilOmenSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (!(m is BaseCreature || m is PlayerMobile))
             {
                 Caster.SendLocalizedMessage(1060508); // You can't curse that.

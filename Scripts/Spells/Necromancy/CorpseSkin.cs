@@ -50,13 +50,11 @@ namespace Server.Spells.Necromancy
             return 70;
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<CorpseSkinSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (CheckHSequence(m))
             {
                 SpellHelper.Turn(Caster, m);
@@ -73,12 +71,12 @@ namespace Server.Spells.Necromancy
             /* Transmogrifies the flesh of the target creature or player to resemble rotted corpse flesh,
                 * making them more vulnerable to Fire and Poison damage,
                 * but increasing their resistance to Physical and Cold damage.
-                * 
+                *
                 * The effect lasts for ((Spirit Speak skill level - target's Resist Magic skill level) / 25 ) + 40 seconds.
-                * 
+                *
                 * NOTE: Algorithm above is fixed point, should be:
                 * ((ss-mr)/2.5) + 40
-                * 
+                *
                 * NOTE: Resistance is not checked if targeting yourself
                 */
 
@@ -162,27 +160,6 @@ namespace Server.Spells.Necromancy
             protected override void OnTick()
             {
                 DoExpire();
-            }
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly CorpseSkinSpell m_Owner;
-            public InternalTarget(CorpseSkinSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

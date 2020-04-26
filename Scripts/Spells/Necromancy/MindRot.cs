@@ -64,13 +64,11 @@ namespace Server.Spells.Necromancy
             }
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<MindRotSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (HasMindRotScalar(m))
             {
                 Caster.SendLocalizedMessage(1005559); // This spell is already in effect.
@@ -109,29 +107,6 @@ namespace Server.Spells.Necromancy
                 SetMindRotScalar(Caster, m, 2.00 * strength, duration);
 
             HarmfulSpell(m);
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly MindRotSpell m_Owner;
-            public InternalTarget(MindRotSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-                else
-                    from.SendLocalizedMessage(1060508); // You can't curse that.
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 

@@ -24,6 +24,9 @@ namespace Server.Spells.Necromancy
         public override double RequiredSkill => 60.0;
         public override int RequiredMana => 23;
         public override bool DelayedDamage => false;
+
+        protected override bool UsesTarget => false;
+
         public override void OnCast()
         {
             if (CheckSequence())

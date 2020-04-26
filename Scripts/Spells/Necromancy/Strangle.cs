@@ -44,13 +44,11 @@ namespace Server.Spells.Necromancy
             return true;
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<StrangleSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (CheckHSequence(m))
             {
                 SpellHelper.Turn(Caster, m);
@@ -229,27 +227,6 @@ namespace Server.Spells.Necromancy
                     if (0.60 <= Utility.RandomDouble()) // OSI: randomly revealed between first and third damage tick, guessing 60% chance
                         m_Target.RevealingAction();
                 }
-            }
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly StrangleSpell m_Owner;
-            public InternalTarget(StrangleSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

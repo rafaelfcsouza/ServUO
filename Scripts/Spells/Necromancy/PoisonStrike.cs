@@ -25,13 +25,12 @@ namespace Server.Spells.Necromancy
         public override double RequiredSkill => 50.0;
         public override int RequiredMana => 17;
         public override bool DelayedDamage => false;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(IDamageable m)
+        protected override Target CreateTarget() => new SpellTarget<PoisonStrikeSpell, IDamageable>(this, TargetFlags.Harmful);
+
+        public override void Target(object o)
         {
+            IDamageable m = o as IDamageable;
             if (CheckHSequence(m))
             {
                 Mobile mob = m as Mobile;
@@ -80,27 +79,6 @@ namespace Server.Spells.Necromancy
                     Caster.DoHarmful(id);
                     SpellHelper.Damage(this, id, ((id is PlayerMobile && Caster.Player) ? pvpDamage : pvmDamage) / num, 0, 0, 0, 100, 0);
                 }
-            }
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly PoisonStrikeSpell m_Owner;
-            public InternalTarget(PoisonStrikeSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is IDamageable)
-                    m_Owner.Target((IDamageable)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

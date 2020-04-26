@@ -25,13 +25,12 @@ namespace Server.Spells.Necromancy
         public override double RequiredSkill => 20.0;
         public override int RequiredMana => 5;
         public override bool DelayedDamage => false;
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
 
-        public void Target(Mobile m)
+        protected override Target CreateTarget() => new SpellTarget<PainSpikeSpell, Mobile>(this, TargetFlags.Harmful);
+
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (CheckHSequence(m))
             {
                 SpellHelper.Turn(Caster, m);
@@ -48,7 +47,7 @@ namespace Server.Spells.Necromancy
             //SpellHelper.CheckReflect( (int)Circle, Caster, ref m ); //Irrelevent asfter AoS
 
             /* Temporarily causes intense physical pain to the target, dealing direct damage.
-             * After 10 seconds the spell wears off, and if the target is still alive, 
+             * After 10 seconds the spell wears off, and if the target is still alive,
              * some of the Hit Points lost through Pain Spike are restored.
              */
 
@@ -125,27 +124,6 @@ namespace Server.Spells.Necromancy
 
                     Stop();
                 }
-            }
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly PainSpikeSpell m_Owner;
-            public InternalTarget(PainSpikeSpell owner)
-                : base(10, false, TargetFlags.Harmful)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

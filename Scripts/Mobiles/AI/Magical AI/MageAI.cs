@@ -1285,7 +1285,7 @@ namespace Server.Mobiles
                                 targ is NatureFurySpell.InternalTarget);
                 bool isField = (targ is SpellTarget<FireFieldSpell, IPoint3D> || targ is SpellTarget<PoisonFieldSpell, IPoint3D> ||
                                targ is SpellTarget<ParalyzeFieldSpell, IPoint3D>);
-                bool isAnimate = (targ is AnimateDeadSpell.InternalTarget);
+                bool isAnimate = (targ is AnimateDeadSpell.AnimateDeadSpellTarget);
                 bool isDispelField = (targ is DispelFieldSpell.DispelFieldSpellTarget);
                 bool teleportAway = false;
 

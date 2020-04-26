@@ -24,6 +24,9 @@ namespace Server.Spells.Necromancy
         public override int ColdResistOffset => +10;
         public override int PoisResistOffset => +10;
         public override double TickRate => 2;
+
+        protected override bool UsesTarget => false;
+
         public override void DoEffect(Mobile m)
         {
             m.PlaySound(0x19C);

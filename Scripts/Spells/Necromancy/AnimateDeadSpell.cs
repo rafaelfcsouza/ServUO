@@ -25,11 +25,7 @@ namespace Server.Spells.Necromancy
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-            Caster.SendLocalizedMessage(1061083); // Animate what corpse?
-        }
+        protected override Target CreateTarget() => new AnimateDeadSpellTarget(this);
 
         private class CreatureGroup
         {
@@ -148,7 +144,7 @@ namespace Server.Spells.Necromancy
             }),
         };
 
-        public void Target(object obj)
+        public override void Target(object obj)
         {
             Corpse c = obj as Corpse;
 
@@ -378,24 +374,12 @@ namespace Server.Spells.Necromancy
             bc.Hits = bc.Hits; // refresh hits
         }
 
-        public class InternalTarget : Target
+        public class AnimateDeadSpellTarget : SpellTarget<AnimateDeadSpell, Corpse>
         {
-            private readonly AnimateDeadSpell m_Owner;
-
-            public InternalTarget(AnimateDeadSpell owner)
-                : base(10, false, TargetFlags.None)
+            public AnimateDeadSpellTarget(AnimateDeadSpell owner)
+                : base(owner,TargetFlags.None)
             {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                m_Owner.Target(o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
+                owner.Caster.SendLocalizedMessage(1061083); // Animate what corpse?
             }
         }
     }

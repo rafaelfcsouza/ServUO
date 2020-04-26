@@ -19,6 +19,9 @@ namespace Server.Spells.Necromancy
         public override double RequiredSkill => 40.0;
         public override int RequiredMana => 11;
         public override int Body => 746;
+
+        protected override bool UsesTarget => false;
+
         public override void DoEffect(Mobile m)
         {
             m.PlaySound(0x165);

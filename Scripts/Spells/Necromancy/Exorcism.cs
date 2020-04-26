@@ -58,6 +58,9 @@ namespace Server.Spells.Necromancy
         public override double RequiredSkill => 80.0;
         public override int RequiredMana => 40;
         public override bool DelayedDamage => false;
+
+        protected override bool UsesTarget => false;
+
         public override bool CheckCast()
         {
             if (Caster.Skills.SpiritSpeak.Value < 100.0)

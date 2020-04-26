@@ -21,6 +21,8 @@ namespace Server.Spells.Necromancy
         public override double RequiredSkill => 30.0;
         public override int RequiredMana => 17;
 
+        protected override bool UsesTarget => false;
+
         public SummonFamiliarSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
