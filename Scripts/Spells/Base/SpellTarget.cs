@@ -14,6 +14,12 @@ namespace Server.Spells
             Spell = spell;
         }
 
+        public SpellTarget(TSpell spell, TargetFlags flag, bool allowTargetGround)
+            : base(10, allowTargetGround, flag)
+        {
+            Spell = spell;
+        }
+
         protected override void OnTarget(Mobile from, object o)
         {
             if (!(o is TTarget)) return;

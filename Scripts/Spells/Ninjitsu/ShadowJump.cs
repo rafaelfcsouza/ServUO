@@ -38,14 +38,11 @@ namespace Server.Spells.Ninjitsu
             return false;
         }
 
-        public override void OnCast()
-        {
-            Caster.SendLocalizedMessage(1063088); // You prepare to perform a Shadowjump.
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new ShadowjumpSpellTarget(this);
 
-        public void Target(IPoint3D p)
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
             IPoint3D orig = p;
             Map map = Caster.Map;
 
@@ -98,26 +95,12 @@ namespace Server.Spells.Ninjitsu
             FinishSequence();
         }
 
-        public class InternalTarget : Target
+        public class ShadowjumpSpellTarget : SpellTarget<Shadowjump, IPoint3D>
         {
-            private readonly Shadowjump m_Owner;
-            public InternalTarget(Shadowjump owner)
-                : base(11, true, TargetFlags.None)
+            public ShadowjumpSpellTarget(Shadowjump owner)
+                : base(owner, TargetFlags.None, true)
             {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                IPoint3D p = o as IPoint3D;
-
-                if (p != null)
-                    m_Owner.Target(p);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
+                owner.Caster.SendLocalizedMessage(1063088); // You prepare to perform a Shadowjump.
             }
         }
     }

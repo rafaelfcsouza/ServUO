@@ -25,6 +25,8 @@ namespace Server.Spells.Ninjitsu
         public override int RequiredMana => 10;
         public override bool BlockedByAnimalForm => false;
 
+        protected override bool UsesTarget => false;
+
         public static bool HasClone(Mobile m)
         {
             return m_CloneCount.ContainsKey(m);

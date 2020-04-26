@@ -38,6 +38,8 @@ namespace Server.Spells.Ninjitsu
 
         public override bool BlockedByAnimalForm => false;
 
+        protected override bool UsesTarget => false;
+
         public AnimalForm(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         { }
