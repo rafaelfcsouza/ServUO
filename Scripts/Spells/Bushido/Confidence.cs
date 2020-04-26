@@ -13,6 +13,8 @@ namespace Server.Spells.Bushido
         private static readonly Dictionary<Mobile, Timer> m_Table = new Dictionary<Mobile, Timer>();
         private static readonly Dictionary<Mobile, Timer> m_RegenTable = new Dictionary<Mobile, Timer>();
 
+        protected override bool UsesTarget => false;
+
         public Confidence(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
@@ -46,7 +48,7 @@ namespace Server.Spells.Bushido
             int anticipateHitBonus = SkillMasteries.MasteryInfo.AnticipateHitBonus(m);
 
             if (anticipateHitBonus > 0)
-                BuffInfo.AddBuff(m, new BuffInfo(BuffIcon.AnticipateHit, 1155905, 1156057, TimeSpan.FromSeconds(4), m, String.Format("{0}\t{1}", anticipateHitBonus.ToString(), "75"))); // ~1_CHANCE~% chance to reduce Confidence heal by ~2_REDUCE~% when hit. 
+                BuffInfo.AddBuff(m, new BuffInfo(BuffIcon.AnticipateHit, 1155905, 1156057, TimeSpan.FromSeconds(4), m, String.Format("{0}\t{1}", anticipateHitBonus.ToString(), "75"))); // ~1_CHANCE~% chance to reduce Confidence heal by ~2_REDUCE~% when hit.
         }
 
         public static void EndConfidence(Mobile m)

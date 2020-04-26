@@ -11,6 +11,9 @@ namespace Server.Spells.Bushido
             -1,
             9002);
         private static readonly Hashtable m_Table = new Hashtable();
+
+        protected override bool UsesTarget => false;
+
         public CounterAttack(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
