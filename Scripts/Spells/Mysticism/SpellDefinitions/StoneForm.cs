@@ -34,6 +34,8 @@ namespace Server.Spells.Mysticism
         public override int PoisResistOffset => m_ResisMod;
         public override int NrgyResistOffset => m_ResisMod;
 
+        protected override bool UsesTarget => false;
+
         public StoneFormSpell(Mobile caster, Item scroll) : base(caster, scroll, m_Info)
         {
         }

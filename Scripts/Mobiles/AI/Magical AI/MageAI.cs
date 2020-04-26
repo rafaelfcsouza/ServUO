@@ -1272,7 +1272,7 @@ namespace Server.Mobiles
             if (targ == null)
                 return false;
 
-            bool harmful = (targ.Flags & TargetFlags.Harmful) != 0 || targ is HailStormSpell.InternalTarget ||
+            bool harmful = (targ.Flags & TargetFlags.Harmful) != 0 || targ is SpellTarget<HailStormSpell, IPoint3D> ||
                           targ is WildfireSpell.InternalTarget;
             bool beneficial = (targ.Flags & TargetFlags.Beneficial) != 0 || targ is SpellTarget<ArchCureSpell, IPoint3D>;
 

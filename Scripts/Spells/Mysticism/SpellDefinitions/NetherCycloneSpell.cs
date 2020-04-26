@@ -23,14 +23,11 @@ namespace Server.Spells.Mysticism
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<NetherCycloneSpell, IPoint3D>(this, TargetFlags.None);
 
-        public void OnTarget(IPoint3D p)
+        public override void Target(object o)
         {
-            if (p != null && CheckSequence())
+            if (o is IPoint3D p && CheckSequence())
             {
                 SpellHelper.Turn(Caster, p);
                 SpellHelper.GetSurfaceTop(ref p);
@@ -107,41 +104,6 @@ namespace Server.Spells.Mysticism
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            public NetherCycloneSpell Owner { get; set; }
-
-            public InternalTarget(NetherCycloneSpell owner)
-                : this(owner, false)
-            {
-            }
-
-            public InternalTarget(NetherCycloneSpell owner, bool allowland)
-                : base(12, allowland, TargetFlags.None)
-            {
-                Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o == null)
-                    return;
-
-                if (!from.CanSee(o))
-                    from.SendLocalizedMessage(500237); // Target can not be seen.
-                else if (o is IPoint3D)
-                {
-                    SpellHelper.Turn(from, o);
-                    Owner.OnTarget((IPoint3D)o);
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                Owner.FinishSequence();
-            }
         }
     }
 }

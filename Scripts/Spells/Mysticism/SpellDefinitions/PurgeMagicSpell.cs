@@ -43,12 +43,9 @@ namespace Server.Spells.Mysticism
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<PurgeMagicSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void OnTarget(object o)
+        public override void Target(object o)
         {
             Mobile target = o as Mobile;
 
@@ -297,41 +294,6 @@ namespace Server.Spells.Mysticism
             protected override void OnTick()
             {
                 PurgeMagicSpell.RemoveCurse(m_Mobile, m_Caster);
-            }
-        }
-
-        public class InternalTarget : Target
-        {
-            public PurgeMagicSpell Owner { get; set; }
-
-            public InternalTarget(PurgeMagicSpell owner)
-                : this(owner, false)
-            {
-            }
-
-            public InternalTarget(PurgeMagicSpell owner, bool allowland)
-                : base(12, allowland, TargetFlags.Harmful)
-            {
-                Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o == null)
-                    return;
-
-                if (!from.CanSee(o))
-                    from.SendLocalizedMessage(500237); // Target can not be seen.
-                else
-                {
-                    SpellHelper.Turn(from, o);
-                    Owner.OnTarget(o);
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                Owner.FinishSequence();
             }
         }
     }

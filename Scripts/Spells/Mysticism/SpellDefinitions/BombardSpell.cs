@@ -23,18 +23,18 @@ namespace Server.Spells.Mysticism
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<BombardSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void OnTarget(IDamageable d)
+        public override void Target(object o)
         {
+            IDamageable d = o as IDamageable;
+
             if (d == null)
             {
                 return;
             }
-            else if (CheckHSequence(d))
+
+            if (CheckHSequence(d))
             {
                 IDamageable target = d;
                 IDamageable source = Caster;
@@ -79,41 +79,6 @@ namespace Server.Spells.Mysticism
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            public BombardSpell Owner { get; set; }
-
-            public InternalTarget(BombardSpell owner)
-                : this(owner, false)
-            {
-            }
-
-            public InternalTarget(BombardSpell owner, bool allowland)
-                : base(12, allowland, TargetFlags.Harmful)
-            {
-                Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o == null)
-                    return;
-
-                if (!from.CanSee(o))
-                    from.SendLocalizedMessage(500237); // Target can not be seen.
-                else if (o is IDamageable)
-                {
-                    SpellHelper.Turn(from, o);
-                    Owner.OnTarget((IDamageable)o);
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                Owner.FinishSequence();
-            }
         }
     }
 }

@@ -22,20 +22,16 @@ namespace Server.Spells.Mysticism
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<SleepSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void OnTarget(object o)
+        public override void Target(object o)
         {
-            Mobile target = o as Mobile;
-
-            if (target == null)
+            if (!(o is Mobile target))
             {
                 return;
             }
-            else if (target.Paralyzed)
+
+            if (target.Paralyzed)
             {
                 Caster.SendLocalizedMessage(1080134); //Your target is already immobilized and cannot be slept.
             }
@@ -149,41 +145,6 @@ namespace Server.Spells.Mysticism
 
             if (m_ImmunityList.Contains(m))
                 m_ImmunityList.Remove(m);
-        }
-
-        public class InternalTarget : Target
-        {
-            public SleepSpell Owner { get; set; }
-
-            public InternalTarget(SleepSpell owner)
-                : this(owner, false)
-            {
-            }
-
-            public InternalTarget(SleepSpell owner, bool allowland)
-                : base(12, allowland, TargetFlags.Harmful)
-            {
-                Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o == null)
-                    return;
-
-                if (!from.CanSee(o))
-                    from.SendLocalizedMessage(500237); // Target can not be seen.
-                else
-                {
-                    SpellHelper.Turn(from, o);
-                    Owner.OnTarget(o);
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                Owner.FinishSequence();
-            }
         }
     }
 }

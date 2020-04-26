@@ -23,14 +23,11 @@ namespace Server.Spells.Mysticism
         public override bool DelayedDamageStacking => false;
         public override Type[] DelayDamageFamily => new Type[] { typeof(Server.Spells.First.MagicArrowSpell) };
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<NetherBoltSpell, IDamageable>(this, TargetFlags.Harmful);
 
-        public void OnTarget(IDamageable d)
+        public override void Target(object o)
         {
-            if (d == null)
+            if (!(o is IDamageable d))
             {
                 return;
             }
@@ -65,41 +62,6 @@ namespace Server.Spells.Mysticism
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            public NetherBoltSpell Owner { get; set; }
-
-            public InternalTarget(NetherBoltSpell owner)
-                : this(owner, false)
-            {
-            }
-
-            public InternalTarget(NetherBoltSpell owner, bool allowland)
-                : base(12, allowland, TargetFlags.Harmful)
-            {
-                Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o == null)
-                    return;
-
-                if (!from.CanSee(o))
-                    from.SendLocalizedMessage(500237); // Target can not be seen.
-                else if (o is IDamageable)
-                {
-                    SpellHelper.Turn(from, o);
-                    Owner.OnTarget((IDamageable)o);
-                }
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                Owner.FinishSequence();
-            }
         }
     }
 }

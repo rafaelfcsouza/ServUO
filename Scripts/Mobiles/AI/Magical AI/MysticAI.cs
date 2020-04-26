@@ -151,7 +151,7 @@ namespace Server.Mobiles
             if (t == null)
                 return false;
 
-            if (t is HailStormSpell.InternalTarget || t is NetherCycloneSpell.InternalTarget)
+            if (t is SpellTarget<HailStormSpell, IPoint3D>|| t is SpellTarget<NetherCycloneSpell, IPoint3D>)
             {
                 if (m_Mobile.Combatant != null && m_Mobile.InRange(m_Mobile.Combatant.Location, 8))
                 {

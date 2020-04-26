@@ -21,35 +21,11 @@ namespace Server.Spells.Mysticism
         {
         }
 
-        public override void OnCast()
+        protected override Target CreateTarget() => new SpellTarget<MassSleepSpell, IPoint3D>(this, TargetFlags.None);
+
+        public override void Target(object o)
         {
-            Caster.Target = new InternalTarget(this);
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly MassSleepSpell m_Owner;
-
-            public InternalTarget(MassSleepSpell owner)
-                : base(10, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is IPoint3D)
-                    m_Owner.Target((IPoint3D)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
-        }
-
-        public void Target(IPoint3D p)
-        {
+            IPoint3D p = o as IPoint3D;
             if (!Caster.CanSee(p))
             {
                 Caster.SendLocalizedMessage(500237); // Target can not be seen.

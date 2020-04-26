@@ -22,13 +22,11 @@ namespace Server.Spells.Mysticism
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<AnimatedWeaponSpell, IPoint3D>(this, TargetFlags.None);
 
-        public void Target(IPoint3D p)
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
             if ((Caster.Followers + 4) > Caster.FollowersMax)
             {
                 Caster.SendLocalizedMessage(1049645); // You have too many followers to summon that creature.
@@ -58,28 +56,6 @@ namespace Server.Spells.Mysticism
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly AnimatedWeaponSpell m_Owner;
-
-            public InternalTarget(AnimatedWeaponSpell owner)
-                : base(12, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is IPoint3D)
-                    m_Owner.Target((IPoint3D)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

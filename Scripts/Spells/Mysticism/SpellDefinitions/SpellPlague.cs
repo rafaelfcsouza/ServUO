@@ -8,14 +8,14 @@ namespace Server.Spells.Mysticism
     public class SpellPlagueSpell : MysticSpell
     {
         private static readonly SpellInfo m_Info = new SpellInfo(
-                "Spell Plague", "Vas Rel Jux Ort",
-                230,
-                9022,
-                Reagent.DaemonBone,
-                Reagent.DragonBlood,
-                Reagent.Nightshade,
-                Reagent.SulfurousAsh
-            );
+            "Spell Plague", "Vas Rel Jux Ort",
+            230,
+            9022,
+            Reagent.DaemonBone,
+            Reagent.DragonBlood,
+            Reagent.Nightshade,
+            Reagent.SulfurousAsh
+        );
 
         public override SpellCircle Circle => SpellCircle.Seventh;
 
@@ -24,12 +24,9 @@ namespace Server.Spells.Mysticism
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<SpellPlagueSpell, Mobile>(this, TargetFlags.Harmful);
 
-        public void OnTarget(object o)
+        public override void Target(object o)
         {
             Mobile m = o as Mobile;
 
@@ -47,14 +44,14 @@ namespace Server.Spells.Mysticism
             }
             else if (CheckHSequence(m))
             {
-                SpellHelper.CheckReflect((int)Circle, Caster, ref m);
+                SpellHelper.CheckReflect((int) Circle, Caster, ref m);
 
                 SpellHelper.Turn(Caster, m);
 
                 Caster.PlaySound(0x658);
 
                 m.FixedParticles(0x375A, 1, 17, 9919, 1161, 7, EffectLayer.Waist);
-                m.FixedParticles(0x3728, 1, 13, 9502, 1161, 7, (EffectLayer)255);
+                m.FixedParticles(0x3728, 1, 13, 9502, 1161, 7, (EffectLayer) 255);
 
                 if (!m_Table.ContainsKey(m) || m_Table[m] == null)
                     m_Table.Add(m, new List<SpellPlagueTimer>());
@@ -126,7 +123,7 @@ namespace Server.Spells.Mysticism
             if (caster.Skills[SkillName.Focus].Value > sec)
                 sec = caster.Skills[SkillName.Focus].Value;
 
-            int damage = (int)((prim + sec) / 12) + Utility.RandomMinMax(1, 6);
+            int damage = (int) ((prim + sec) / 12) + Utility.RandomMinMax(1, 6);
 
             if (amount > 1)
                 damage /= amount;
@@ -134,7 +131,7 @@ namespace Server.Spells.Mysticism
             from.PlaySound(0x658);
 
             from.FixedParticles(0x375A, 1, 17, 9919, 1161, 7, EffectLayer.Waist);
-            from.FixedParticles(0x3728, 1, 13, 9502, 1161, 7, (EffectLayer)255);
+            from.FixedParticles(0x3728, 1, 13, 9502, 1161, 7, (EffectLayer) 255);
 
             int sdiBonus = SpellHelper.GetSpellDamageBonus(caster, from, SkillName.Mysticism, from is PlayerMobile);
 
@@ -171,83 +168,53 @@ namespace Server.Spells.Mysticism
             }
         }
 
-        public class InternalTarget : Target
+        public class SpellPlagueTimer : Timer
         {
-            public SpellPlagueSpell Owner { get; set; }
+            private readonly Mobile m_Caster;
+            private readonly Mobile m_Owner;
+            private int m_Amount;
+            private DateTime m_NextUse;
 
-            public InternalTarget(SpellPlagueSpell owner)
-                : this(owner, false)
+            public Mobile Caster => m_Caster;
+
+            public int Amount
             {
-            }
-
-            public InternalTarget(SpellPlagueSpell owner, bool allowland)
-                : base(12, allowland, TargetFlags.Harmful)
-            {
-                Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o == null)
-                    return;
-
-                if (!from.CanSee(o))
-                    from.SendLocalizedMessage(500237); // Target can not be seen.
-                else
+                get { return m_Amount; }
+                set
                 {
-                    SpellHelper.Turn(from, o);
-                    Owner.OnTarget(o);
+                    m_Amount = value;
+
+                    if (m_Amount >= 3)
+                        EndTimer();
                 }
             }
 
-            protected override void OnTargetFinish(Mobile from)
+            public DateTime NextUse
             {
-                Owner.FinishSequence();
+                get { return m_NextUse; }
+                set { m_NextUse = value; }
             }
-        }
-    }
 
-    public class SpellPlagueTimer : Timer
-    {
-        private readonly Mobile m_Caster;
-        private readonly Mobile m_Owner;
-        private int m_Amount;
-        private DateTime m_NextUse;
-
-        public Mobile Caster => m_Caster;
-        public int Amount
-        {
-            get { return m_Amount; }
-            set
+            public SpellPlagueTimer(Mobile caster, Mobile owner, TimeSpan duration)
+                : base(duration)
             {
-                m_Amount = value;
-
-                if (m_Amount >= 3)
-                    EndTimer();
+                m_Caster = caster;
+                m_Owner = owner;
+                m_Amount = 0;
+                m_NextUse = DateTime.UtcNow;
+                Start();
             }
-        }
 
-        public DateTime NextUse { get { return m_NextUse; } set { m_NextUse = value; } }
+            protected override void OnTick()
+            {
+                EndTimer();
+            }
 
-        public SpellPlagueTimer(Mobile caster, Mobile owner, TimeSpan duration)
-            : base(duration)
-        {
-            m_Caster = caster;
-            m_Owner = owner;
-            m_Amount = 0;
-            m_NextUse = DateTime.UtcNow;
-            Start();
-        }
-
-        protected override void OnTick()
-        {
-            EndTimer();
-        }
-
-        private void EndTimer()
-        {
-            Stop();
-            SpellPlagueSpell.RemoveFromList(m_Owner);
+            private void EndTimer()
+            {
+                Stop();
+                SpellPlagueSpell.RemoveFromList(m_Owner);
+            }
         }
     }
 }

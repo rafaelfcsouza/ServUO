@@ -26,13 +26,11 @@ namespace Server.Spells.Mysticism
         {
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<HailStormSpell, IPoint3D>(this, TargetFlags.None);
 
-        public void OnTarget(IPoint3D p)
+        public override void Target(object o)
         {
+            IPoint3D p = o as IPoint3D;
             if (SpellHelper.CheckTown(p, Caster) && CheckSequence())
             {
                 SpellHelper.Turn(Caster, p);
@@ -90,28 +88,6 @@ namespace Server.Spells.Mysticism
             }
 
             FinishSequence();
-        }
-
-        public class InternalTarget : Target
-        {
-            private readonly HailStormSpell m_Owner;
-
-            public InternalTarget(HailStormSpell owner)
-                : base(10, true, TargetFlags.None)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is IPoint3D)
-                    m_Owner.OnTarget((IPoint3D)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

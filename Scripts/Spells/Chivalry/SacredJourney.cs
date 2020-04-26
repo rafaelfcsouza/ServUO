@@ -37,9 +37,9 @@ namespace Server.Spells.Chivalry
         public override int RequiredTithing => 15;
         public override int MantraNumber => 1060727;// Sanctum Viatas
         public override bool BlocksMovement => false;
-        
+
         protected override Target CreateTarget() => new SacredJourneySpellTarget(this);
-        
+
         public override void OnCast()
         {
             if (m_Entry == null)
@@ -63,7 +63,7 @@ namespace Server.Spells.Chivalry
                 }
             }
         }
-        
+
         public override void Target(object o)
             {
                 if (o is RecallRune rune)

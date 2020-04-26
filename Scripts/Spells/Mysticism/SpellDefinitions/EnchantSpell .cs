@@ -16,6 +16,8 @@ namespace Server.Spells.Mysticism
         public BaseWeapon Weapon { get; set; }
         public AosWeaponAttribute Attribute { get; set; }
 
+        protected override bool UsesTarget => false;
+
         private static readonly SpellInfo m_Info = new SpellInfo(
                 "Enchant", "In Ort Ylem",
                 230,

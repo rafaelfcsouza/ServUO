@@ -21,6 +21,8 @@ namespace Server.Spells.Mysticism
                 Reagent.DragonBlood
             );
 
+        protected override bool UsesTarget => false;
+
         public SpellTriggerSpell(Mobile caster, Item scroll) : base(caster, scroll, m_Info)
         {
         }
