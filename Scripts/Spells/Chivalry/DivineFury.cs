@@ -23,6 +23,9 @@ namespace Server.Spells.Chivalry
         public override int RequiredTithing => 10;
         public override int MantraNumber => 1060722;// Divinum Furis
         public override bool BlocksMovement => false;
+
+        protected override bool UsesTarget => false;
+
         public static bool UnderEffect(Mobile m)
         {
             return m_Table.ContainsKey(m);

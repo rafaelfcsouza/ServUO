@@ -34,13 +34,11 @@ namespace Server.Spells.Chivalry
             return true;
         }
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<RemoveCurseSpell,Mobile>(this, TargetFlags.Beneficial);
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (CheckBSequence(m))
             {
                 SpellHelper.Turn(Caster, m);
@@ -97,27 +95,6 @@ namespace Server.Spells.Chivalry
             }
 
             FinishSequence();
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly RemoveCurseSpell m_Owner;
-            public InternalTarget(RemoveCurseSpell owner)
-                : base(10, false, TargetFlags.Beneficial)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

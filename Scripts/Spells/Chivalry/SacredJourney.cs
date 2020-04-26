@@ -4,6 +4,7 @@ using Server.Multis;
 using Server.Network;
 using Server.Targeting;
 using System;
+using Server.Engines.NewMagincia;
 
 namespace Server.Spells.Chivalry
 {
@@ -16,6 +17,7 @@ namespace Server.Spells.Chivalry
 
         private readonly RunebookEntry m_Entry;
         private readonly Runebook m_Book;
+        private bool _Casted;
 
         public SacredJourneySpell(Mobile caster, Item scroll)
             : this(caster, scroll, null, null)
@@ -35,12 +37,19 @@ namespace Server.Spells.Chivalry
         public override int RequiredTithing => 15;
         public override int MantraNumber => 1060727;// Sanctum Viatas
         public override bool BlocksMovement => false;
+        
+        protected override Target CreateTarget() => new SacredJourneySpellTarget(this);
+        
         public override void OnCast()
         {
             if (m_Entry == null)
             {
-                Caster.SendLocalizedMessage(501029); // Select Marked item.
-                Caster.Target = new InternalTarget(this);
+                base.OnCast();
+            }
+            else if (!_Casted && Caster is PlayerMobile)
+            {
+                _Casted = true;
+                Invoke();
             }
             else
             {
@@ -54,6 +63,72 @@ namespace Server.Spells.Chivalry
                 }
             }
         }
+        
+        public override void Target(object o)
+            {
+                if (o is RecallRune rune)
+                {
+                    if (rune.Marked)
+                    {
+                        if (rune.Type == RecallRuneType.Ship)
+                        {
+                            Effect(rune.Galleon);
+                        }
+                        else
+                        {
+                            Effect(rune.Target, rune.TargetMap, true);
+                        }
+                    }
+                    else
+                    {
+                        Caster.SendLocalizedMessage(501805); // That rune is not yet marked.
+                    }
+                }
+                else if (o is Runebook runebook)
+                {
+                    RunebookEntry e = runebook.Default;
+
+                    if (e != null)
+                    {
+                        if (e.Type == RecallRuneType.Ship)
+                        {
+                            Effect(e.Galleon);
+                        }
+                        else
+                        {
+                            Effect(e.Location, e.Map, true);
+                        }
+                    }
+                    else
+                    {
+                        Caster.SendLocalizedMessage(502354); // Target is not marked.
+                    }
+                }
+                else if (o is Key key && key.KeyValue != 0 && key.Link is BaseBoat)
+                {
+                    BaseBoat boat = key.Link as BaseBoat;
+
+                    if (!boat.Deleted && boat.CheckKey(key.KeyValue))
+                        Effect(boat.GetMarkedLocation(), boat.Map, false);
+                    else
+                        Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 502357, Caster.Name, "")); // I can not recall Caster that object.
+                }
+                else if (o is HouseRaffleDeed deed && deed.ValidLocation())
+                {
+                    Effect(deed.PlotLocation, deed.PlotFacet, true);
+                }
+                else if (o is WritOfLease lease)
+                {
+                    if (lease.RecallLoc != Point3D.Zero && lease.Facet != null && lease.Facet != Map.Internal)
+                        Effect(lease.RecallLoc, lease.Facet, false);
+                    else
+                        Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 502357, Caster.Name, "")); // I can not recall Caster that object.
+                }
+                else
+                {
+                    Caster.Send(new MessageLocalized(Caster.Serial, Caster.Body, MessageType.Regular, 0x3B2, 3, 502357, Caster.Name, "")); // I can not recall Caster that object.
+                }
+            }
 
         public override bool CheckCast()
         {
@@ -72,7 +147,7 @@ namespace Server.Spells.Chivalry
             }
             else if (SpellHelper.CheckCombat(Caster))
             {
-                Caster.SendLocalizedMessage(1061282); // You cannot use the Sacred Journey ability to flee from combat.
+                Caster.SendLocalizedMessage(1061282); // You cannot use the Sacred Journey ability to flee Caster combat.
                 return false;
             }
             else if (Misc.WeightOverloading.IsOverloaded(Caster))
@@ -134,7 +209,7 @@ namespace Server.Spells.Chivalry
             }
             else if (SpellHelper.CheckCombat(Caster))
             {
-                Caster.SendLocalizedMessage(1061282); // You cannot use the Sacred Journey ability to flee from combat.
+                Caster.SendLocalizedMessage(1061282); // You cannot use the Sacred Journey ability to flee Caster combat.
             }
             else if (Misc.WeightOverloading.IsOverloaded(Caster))
             {
@@ -173,95 +248,18 @@ namespace Server.Spells.Chivalry
             FinishSequence();
         }
 
-        private class InternalTarget : Target
+        private class SacredJourneySpellTarget : SpellTarget<SacredJourneySpell, object>
         {
             private readonly SacredJourneySpell m_Owner;
 
-            public InternalTarget(SacredJourneySpell owner)
-                : base(10, false, TargetFlags.None)
+            public SacredJourneySpellTarget(SacredJourneySpell owner)
+                : base(owner, TargetFlags.None)
             {
-                m_Owner = owner;
+                owner.Caster.LocalOverheadMessage(MessageType.Regular, 0x3B2, 501029); // Select Marked item.
             }
 
-            protected override void OnTarget(Mobile from, object o)
+            protected override void OnNonlocalTarget(Mobile Caster, object o)
             {
-                if (o is RecallRune)
-                {
-                    RecallRune rune = (RecallRune)o;
-
-                    if (rune.Marked)
-                    {
-                        if (rune.Type == RecallRuneType.Ship)
-                        {
-                            m_Owner.Effect(rune.Galleon);
-                        }
-                        else
-                        {
-                            m_Owner.Effect(rune.Target, rune.TargetMap, true);
-                        }
-                    }
-                    else
-                    {
-                        from.SendLocalizedMessage(501805); // That rune is not yet marked.
-                    }
-                }
-                else if (o is Runebook)
-                {
-                    RunebookEntry e = ((Runebook)o).Default;
-
-                    if (e != null)
-                    {
-                        if (e.Type == RecallRuneType.Ship)
-                        {
-                            m_Owner.Effect(e.Galleon);
-                        }
-                        else
-                        {
-                            m_Owner.Effect(e.Location, e.Map, true);
-                        }
-                    }
-                    else
-                    {
-                        from.SendLocalizedMessage(502354); // Target is not marked.
-                    }
-                }
-                else if (o is Key && ((Key)o).KeyValue != 0 && ((Key)o).Link is BaseBoat)
-                {
-                    BaseBoat boat = ((Key)o).Link as BaseBoat;
-
-                    if (!boat.Deleted && boat.CheckKey(((Key)o).KeyValue))
-                        m_Owner.Effect(boat.GetMarkedLocation(), boat.Map, false);
-                    else
-                        from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 502357, from.Name, "")); // I can not recall from that object.
-                }
-                else if (o is HouseRaffleDeed && ((HouseRaffleDeed)o).ValidLocation())
-                {
-                    HouseRaffleDeed deed = (HouseRaffleDeed)o;
-
-                    m_Owner.Effect(deed.PlotLocation, deed.PlotFacet, true);
-                }
-                else if (o is Engines.NewMagincia.WritOfLease)
-                {
-                    Engines.NewMagincia.WritOfLease lease = (Engines.NewMagincia.WritOfLease)o;
-
-                    if (lease.RecallLoc != Point3D.Zero && lease.Facet != null && lease.Facet != Map.Internal)
-                        m_Owner.Effect(lease.RecallLoc, lease.Facet, false);
-                    else
-                        from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 502357, from.Name, "")); // I can not recall from that object.
-                }
-                else
-                {
-                    from.Send(new MessageLocalized(from.Serial, from.Body, MessageType.Regular, 0x3B2, 3, 502357, from.Name, "")); // I can not recall from that object.
-                }
-            }
-
-            protected override void OnNonlocalTarget(Mobile from, object o)
-            {
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
             }
         }
     }

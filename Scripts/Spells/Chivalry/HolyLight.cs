@@ -24,6 +24,9 @@ namespace Server.Spells.Chivalry
         public override int MantraNumber => 1060724;// Augus Luminos
         public override bool BlocksMovement => false;
         public override bool DelayedDamage => false;
+
+        protected override bool UsesTarget => false;
+
         public override void OnCast()
         {
             if (CheckSequence())

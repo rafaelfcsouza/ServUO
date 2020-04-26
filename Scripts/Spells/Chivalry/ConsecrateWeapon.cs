@@ -24,6 +24,9 @@ namespace Server.Spells.Chivalry
         public override int RequiredTithing => 10;
         public override int MantraNumber => 1060720;// Consecrus Arma
         public override bool BlocksMovement => false;
+        
+        protected override bool UsesTarget => false;
+
         public override void OnCast()
         {
             BaseWeapon weapon = Caster.Weapon as BaseWeapon;

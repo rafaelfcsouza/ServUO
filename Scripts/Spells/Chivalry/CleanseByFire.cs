@@ -20,18 +20,16 @@ namespace Server.Spells.Chivalry
         public override int RequiredTithing => 10;
         public override int MantraNumber => 1060718;// Expor Flamus
 
-        public override void OnCast()
-        {
-            Caster.Target = new InternalTarget(this);
-        }
+        protected override Target CreateTarget() => new SpellTarget<CleanseByFireSpell, Mobile>(this, TargetFlags.Beneficial);
 
         public override bool CheckDisturb(DisturbType type, bool firstCircle, bool resistable)
         {
             return true;
         }
 
-        public void Target(Mobile m)
+        public override void Target(object o)
         {
+            Mobile m = o as Mobile;
             if (!m.Poisoned)
             {
                 Caster.SendLocalizedMessage(1060176); // That creature is not poisoned!
@@ -48,7 +46,7 @@ namespace Server.Spells.Chivalry
 
                 if (p != null)
                 {
-                    // Cleanse by fire is now difficulty based 
+                    // Cleanse by fire is now difficulty based
                     int chanceToCure = 10000 + (int)(Caster.Skills[SkillName.Chivalry].Value * 75) - ((p.RealLevel + 1) * 2000);
                     chanceToCure /= 100;
 
@@ -90,27 +88,6 @@ namespace Server.Spells.Chivalry
             }
 
             FinishSequence();
-        }
-
-        private class InternalTarget : Target
-        {
-            private readonly CleanseByFireSpell m_Owner;
-            public InternalTarget(CleanseByFireSpell owner)
-                : base(10, false, TargetFlags.Beneficial)
-            {
-                m_Owner = owner;
-            }
-
-            protected override void OnTarget(Mobile from, object o)
-            {
-                if (o is Mobile)
-                    m_Owner.Target((Mobile)o);
-            }
-
-            protected override void OnTargetFinish(Mobile from)
-            {
-                m_Owner.FinishSequence();
-            }
         }
     }
 }

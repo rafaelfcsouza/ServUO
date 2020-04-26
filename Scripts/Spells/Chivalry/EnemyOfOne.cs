@@ -24,6 +24,8 @@ namespace Server.Spells.Chivalry
         public override int MantraNumber => 1060723;  // Forul Solum
         public override bool BlocksMovement => false;
 
+        protected override bool UsesTarget => false;
+
         public override TimeSpan GetCastDelay()
         {
             TimeSpan delay = base.GetCastDelay();

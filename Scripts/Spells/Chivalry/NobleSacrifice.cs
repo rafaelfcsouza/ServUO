@@ -23,6 +23,9 @@ namespace Server.Spells.Chivalry
         public override int RequiredTithing => 30;
         public override int MantraNumber => 1060725;// Dium Prostra
         public override bool BlocksMovement => false;
+
+        protected override bool UsesTarget => false;
+
         public override void OnCast()
         {
             if (CheckSequence())

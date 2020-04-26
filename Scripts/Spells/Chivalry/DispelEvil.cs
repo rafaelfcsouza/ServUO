@@ -24,6 +24,9 @@ namespace Server.Spells.Chivalry
         public override int MantraNumber => 1060721;// Dispiro Malas
         public override bool BlocksMovement => false;
         public override bool DelayedDamage => false;
+
+        protected override bool UsesTarget => false;
+
         public override void SendCastEffect()
         {
             Caster.FixedEffect(0x37C4, 10, 7, 4, 3); // At player
