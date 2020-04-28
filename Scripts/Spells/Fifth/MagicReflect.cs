@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using Server.Targeting;
 
 namespace Server.Spells.Fifth
 {
@@ -12,7 +14,20 @@ namespace Server.Spells.Fifth
             Reagent.Garlic,
             Reagent.MandrakeRoot,
             Reagent.SpidersSilk);
-        private static readonly Hashtable m_Table = new Hashtable();
+
+        public static readonly Dictionary<Mobile, MagicReflectionTimer> _TimerTable = new Dictionary<Mobile, MagicReflectionTimer>();
+        private static readonly Dictionary<Mobile, ResistanceMod> _ModTable = new Dictionary<Mobile, ResistanceMod>();
+
+        private static Func<Mobile, int> CalcularePhysicalModification = m => (int) (-25 + m.Skills[SkillName.Inscribe].Value / 20);
+        private static Func<Mobile, TimeSpan> CalculateTimer = m => {
+            var val = m.Skills[SkillName.Magery].Value * 2.0;
+            if (val < 15) val = 15;
+            else if (val > 240) val = 240;
+            return TimeSpan.FromSeconds(val);
+        };
+
+        protected override bool UsesTarget => false;
+
         public MagicReflectSpell(Mobile caster, Item scroll)
             : base(caster, scroll, m_Info)
         {
@@ -21,73 +36,42 @@ namespace Server.Spells.Fifth
         public override SpellCircle Circle => SpellCircle.Fifth;
         public static void EndReflect(Mobile m)
         {
-            if (m_Table.Contains(m))
+            if (_TimerTable.ContainsKey(m))
             {
-                ResistanceMod[] mods = (ResistanceMod[])m_Table[m];
+                m.RemoveResistanceMod(_ModTable[m]);
+                m.MagicDamageAbsorb = 0;
 
-                if (mods != null)
-                {
-                    for (int i = 0; i < mods.Length; ++i)
-                        m.RemoveResistanceMod(mods[i]);
-                }
-
-                m_Table.Remove(m);
+                _TimerTable.Remove(m);
+                _ModTable.Remove(m);
                 BuffInfo.RemoveBuff(m, BuffIcon.MagicReflection);
             }
         }
 
         public override void OnCast()
         {
-            /* The magic reflection spell decreases the caster's physical resistance, while increasing the caster's elemental resistances.
+            /* The magic reflection spell reflects first spell and decreases the caster's physical resistance
             * Physical decrease = 25 - (Inscription/20).
-            * Elemental resistance = +10 (-20 physical, +10 elemental at GM Inscription)
-            * The magic reflection spell has an indefinite duration, becoming active when cast, and deactivated when re-cast.
-            * Reactive Armor, Protection, and Magic Reflection will stay on—even after logging out, even after dying—until you “turn them off” by casting them again. 
+            * Reactive Armor, Protection, and Magic Reflection will stay onï¿½even after logging out, even after dyingï¿½until you ï¿½turn them offï¿½ by casting them again.
             */
             if (CheckSequence())
             {
                 Mobile targ = Caster;
+                targ.PlaySound(0x1E9);
+                targ.FixedParticles(0x375A, 10, 15, 5037, EffectLayer.Waist);
 
-                ResistanceMod[] mods = (ResistanceMod[])m_Table[targ];
 
-                if (mods == null)
-                {
-                    targ.PlaySound(0x1E9);
-                    targ.FixedParticles(0x375A, 10, 15, 5037, EffectLayer.Waist);
+                var timer = CalculateTimer(Caster);
 
-                    int physiMod = -25 + (int)(targ.Skills[SkillName.Inscribe].Value / 20);
-                    int otherMod = 10;
+                targ.MagicDamageAbsorb = 15;
 
-                    mods = new ResistanceMod[5]
-                    {
-                        new ResistanceMod(ResistanceType.Physical, physiMod),
-                        new ResistanceMod(ResistanceType.Fire, otherMod),
-                        new ResistanceMod(ResistanceType.Cold, otherMod),
-                        new ResistanceMod(ResistanceType.Poison,    otherMod),
-                        new ResistanceMod(ResistanceType.Energy,    otherMod)
-                    };
+                ResistanceMod physiMod = new ResistanceMod(ResistanceType.Physical, CalcularePhysicalModification(targ));
 
-                    m_Table[targ] = mods;
+                _ModTable[targ] = physiMod;
+                _TimerTable[targ] = new MagicReflectionTimer(targ, timer);
 
-                    for (int i = 0; i < mods.Length; ++i)
-                        targ.AddResistanceMod(mods[i]);
+                string buffFormat = $"{physiMod}";
 
-                    string buffFormat = String.Format("{0}\t+{1}\t+{1}\t+{1}\t+{1}", physiMod, otherMod);
-
-                    BuffInfo.AddBuff(targ, new BuffInfo(BuffIcon.MagicReflection, 1075817, buffFormat, true));
-                }
-                else
-                {
-                    targ.PlaySound(0x1ED);
-                    targ.FixedParticles(0x375A, 10, 15, 5037, EffectLayer.Waist);
-
-                    m_Table.Remove(targ);
-
-                    for (int i = 0; i < mods.Length; ++i)
-                        targ.RemoveResistanceMod(mods[i]);
-
-                    BuffInfo.RemoveBuff(targ, BuffIcon.MagicReflection);
-                }
+                BuffInfo.AddBuff(targ, new BuffInfo(BuffIcon.MagicReflection, 1075817, timer, targ, buffFormat));
             }
 
             FinishSequence();
@@ -96,7 +80,27 @@ namespace Server.Spells.Fifth
 
         public static bool HasReflect(Mobile m)
         {
-            return m_Table.ContainsKey(m);
+            return _TimerTable.ContainsKey(m);
+        }
+
+        public class MagicReflectionTimer : Timer
+        {
+            private readonly Mobile _Target;
+
+            public MagicReflectionTimer(Mobile target, TimeSpan delay)
+                : base(TimeSpan.Zero)
+            {
+
+                _Target = target;
+                Delay = delay;
+                Priority = TimerPriority.OneSecond;
+                Start();
+            }
+
+            protected override void OnTick()
+            {
+                EndReflect(_Target);
+            }
         }
     }
 }
