@@ -144,9 +144,9 @@ namespace VitaNex.Modules.TrashCollection
 			Instances.Remove(this);
 		}
 
-		public override void OnSingleClick(Mobile m)
+		public override void OnAosSingleClick(Mobile m)
 		{
-			base.OnSingleClick(m);
+			base.OnAosSingleClick(m);
 
 			if (!ProducesWaste)
 			{

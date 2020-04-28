@@ -21,9 +21,6 @@ using System.Text;
 
 using Server;
 using Server.Guilds;
-#if ServUO
-using CustomsFramework;
-#endif
 #endregion
 
 namespace VitaNex.Text
@@ -648,43 +645,5 @@ namespace VitaNex.Text
 
 			WriteGuildSet(set);
 		}
-
-#if ServUO
-		public override void Write(SaveData value)
-		{ }
-
-		public override void WriteData<T>(T value)
-		{ }
-
-		public override void WriteDataList(ArrayList list)
-		{ }
-
-		public override void WriteDataList(ArrayList list, bool tidy)
-		{ }
-
-		public override void Write(List<SaveData> list)
-		{ }
-
-		public override void Write(List<SaveData> list, bool tidy)
-		{ }
-
-		public override void WriteDataList<T>(List<T> list)
-		{ }
-
-		public override void WriteDataList<T>(List<T> list, bool tidy)
-		{ }
-
-		public override void Write(HashSet<SaveData> set)
-		{ }
-
-		public override void Write(HashSet<SaveData> set, bool tidy)
-		{ }
-
-		public override void WriteDataSet<T>(HashSet<T> set)
-		{ }
-
-		public override void WriteDataSet<T>(HashSet<T> set, bool tidy)
-		{ }
-#endif
 	}
 }

@@ -201,10 +201,6 @@ namespace VitaNex.Network
 
 		private static void OnBatchQueryProperties(NetState state, PacketReader pvSrc)
 		{
-			if (state == null || pvSrc == null || !ObjectPropertyList.Enabled)
-			{
-				return;
-			}
 
 			var length = pvSrc.Size - 3;
 
@@ -230,11 +226,6 @@ namespace VitaNex.Network
 
 		private static void OnQueryProperties(NetState state, PacketReader pvSrc)
 		{
-			if (!ObjectPropertyList.Enabled || state == null || pvSrc == null)
-			{
-				return;
-			}
-
 			var serial = (Serial)pvSrc.ReadInt32();
 
 			if (serial.IsValid)

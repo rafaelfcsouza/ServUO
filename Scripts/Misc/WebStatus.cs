@@ -12,7 +12,7 @@ namespace Server.Misc
 {
     public class StatusPage : Timer
     {
-        public static readonly bool Enabled = true;
+        public static readonly bool Enabled = false;
 
         private static HttpListener _Listener;
 

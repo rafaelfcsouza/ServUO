@@ -47,10 +47,8 @@ namespace VitaNex.Modules.AutoPvP
 			OnSingleClick(from);
 		}
 
-		public override void OnSingleClick(Mobile from)
+		public void OnSingleClick(Mobile from)
 		{
-			base.OnSingleClick(from);
-
 			if (Team == null || Team.Battle == null)
 			{
 				return;

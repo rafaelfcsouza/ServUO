@@ -20,9 +20,6 @@ using System.Text;
 
 using Server;
 using Server.Guilds;
-#if ServUO
-using CustomsFramework;
-#endif
 #endregion
 
 namespace VitaNex.Text
@@ -421,46 +418,9 @@ namespace VitaNex.Text
 			return new HashSet<T>(ReadArray<string, T>(o => BaseGuild.FindByName(o) as T, o => o != null));
 		}
 
-#if ServUO
 		public override int PeekInt()
 		{
 			return -1;
 		}
-
-		public override SaveData ReadData()
-		{
-			return null;
-		}
-
-		public override T ReadData<T>()
-		{
-			return null;
-		}
-
-		public override ArrayList ReadDataList()
-		{
-			return null;
-		}
-
-		public override List<SaveData> ReadStrongDataList()
-		{
-			return null;
-		}
-
-		public override List<T> ReadStrongDataList<T>()
-		{
-			return null;
-		}
-
-		public override HashSet<SaveData> ReadDataSet()
-		{
-			return null;
-		}
-
-		public override HashSet<T> ReadDataSet<T>()
-		{
-			return null;
-		}
-#endif
 	}
 }

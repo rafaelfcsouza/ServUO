@@ -803,16 +803,12 @@ namespace VitaNex
 			return value;
 		}
 
-		private const ConsoleColor _BackgroundColor = ConsoleColor.Black;
-		private const ConsoleColor _BorderColor = ConsoleColor.Green;
 		private const ConsoleColor _TextColor = ConsoleColor.White;
 
 		private static void DrawLine(string text = "", int align = 0)
 		{
 			text = text ?? String.Empty;
 			align = Math.Max(0, Math.Min(2, align));
-
-			var defBG = Console.BackgroundColor;
 
 			const int borderWidth = 2;
 			const int indentWidth = 1;
@@ -867,9 +863,7 @@ namespace VitaNex
 
 				foreach (var line in lines)
 				{
-					Console.BackgroundColor = _BorderColor;
 					Console.Write(new String(' ', borderWidth));
-					Console.BackgroundColor = _BackgroundColor;
 					Console.Write(new String(' ', indentWidth));
 
 					var len = maxWidth - line.Length;
@@ -894,28 +888,21 @@ namespace VitaNex
 
 					Console.Write(str);
 					Console.Write(new String(' ', indentWidth));
-					Console.BackgroundColor = _BorderColor;
 					Console.Write(new String(' ', borderWidth));
 				}
 
 				lines.Free(true);
 
-				Console.BackgroundColor = defBG;
 				Utility.PopColor();
 			}
 		}
 
 		private static void DisplayRetroBoot()
 		{
-			ConsoleColor defBG;
-
 			lock (ConsoleLock)
 			{
-				defBG = Console.BackgroundColor;
-
 				Console.WriteLine();
 
-				Console.BackgroundColor = _BorderColor;
 				Console.CursorLeft = 0;
 
 				Console.Write(new String(' ', Math.Max(80, Console.WindowWidth)));
@@ -946,10 +933,8 @@ namespace VitaNex
 
 			lock (ConsoleLock)
 			{
-				Console.BackgroundColor = _BorderColor;
 				Console.Write(new String(' ', Console.WindowWidth));
 
-				Console.BackgroundColor = defBG;
 				Utility.PopColor();
 				Console.WriteLine();
 			}

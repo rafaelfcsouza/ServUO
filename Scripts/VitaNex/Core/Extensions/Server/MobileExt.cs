@@ -408,13 +408,10 @@ namespace Server
 
 			var g = m.Guild as T;
 
-			if (Core.AOS || Guild.NewGuildSystem)
-			{
-				while (g == null && IsControlled(m, out m) && m != null)
-				{
-					g = m.Guild as T;
-				}
-			}
+            while (g == null && IsControlled(m, out m) && m != null)
+            {
+                g = m.Guild as T;
+            }
 
 			return g;
 		}
@@ -434,13 +431,10 @@ namespace Server
 
 			var p = m.Party as T;
 
-			if (Core.AOS || Guild.NewGuildSystem)
-			{
-				while (p == null && IsControlled(m, out m) && m != null)
-				{
-					p = m.Party as T;
-				}
-			}
+            while (p == null && IsControlled(m, out m) && m != null)
+            {
+                p = m.Party as T;
+            }
 
 			return p;
 		}

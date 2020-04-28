@@ -482,10 +482,8 @@ namespace VitaNex.Items
 			OnSingleClick(from);
 		}
 
-		public override void OnSingleClick(Mobile from)
+		public void OnSingleClick(Mobile from)
 		{
-			base.OnSingleClick(from);
-
 			DateTime now = DateTime.UtcNow, readyWhen = ThrownLast + ThrowRecovery;
 			var diff = TimeSpan.Zero;
 

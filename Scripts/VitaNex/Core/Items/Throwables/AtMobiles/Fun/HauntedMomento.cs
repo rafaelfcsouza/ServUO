@@ -27,7 +27,7 @@ namespace VitaNex.Items
 
 		[CommandProperty(AccessLevel.Counselor, AccessLevel.GameMaster)]
 		public HauntedMomento Momento { get { return _Momento; } }
-		
+
 		public override bool ClickTitle { get { return false; } }
 		public override bool AlwaysMurderer { get { return true; } }
 		public override bool BardImmune { get { return true; } }
@@ -38,7 +38,6 @@ namespace VitaNex.Items
 		public override bool CanMoveOverObstacles { get { return true; } }
 		public override bool CanOpenDoors { get { return true; } }
 		public override bool CanTarget { get { return false; } }
-		public override bool CanDrop { get { return false; } }
 		public override bool Commandable { get { return false; } }
 		public override bool DeleteCorpseOnDeath { get { return true; } }
 		public override bool IsScaryToPets { get { return true; } }
@@ -137,7 +136,7 @@ namespace VitaNex.Items
 
 			PlaySound(1383);
 		}
-		
+
 		public override void OnThink()
 		{
 			base.OnThink();
@@ -278,8 +277,10 @@ namespace VitaNex.Items
 		public override void OnDoubleClick(Mobile m)
 		{ }
 
-		public override void OnSingleClick(Mobile m)
-		{ }
+        public void OnSingleClick(Mobile m)
+        {
+            base.OnAosSingleClick(m);
+        }
 
 		public override bool OnDragDrop(Mobile from, Item dropped)
 		{
@@ -290,7 +291,7 @@ namespace VitaNex.Items
 		{
 			return false;
 		}
-		
+
 		public override void OnStatsQuery(Mobile from)
 		{ }
 

@@ -416,7 +416,7 @@ namespace VitaNex.Text
 
 	public sealed class UOFont
 	{
-		public const PixelFormat PixelFormat = System.Drawing.Imaging.PixelFormat.Format16bppArgb1555;
+        public const PixelFormat PixelFormat = System.Drawing.Imaging.PixelFormat.Format32bppPArgb;
 
 		public static Size DefaultCharSize = new Size(8, 10);
 

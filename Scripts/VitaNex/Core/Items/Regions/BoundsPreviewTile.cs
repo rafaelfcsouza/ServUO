@@ -55,9 +55,9 @@ namespace VitaNex.Items
 			list.Add(String.Format("({0}, {1}, {2})", X, Y, Z));
 		}
 
-		public override void OnSingleClick(Mobile from)
+		public override void OnAosSingleClick(Mobile from)
 		{
-			base.OnSingleClick(from);
+			base.OnAosSingleClick(from);
 
 			LabelTo(from, String.Format("{0} ({1}, {2}, {3})", this.ResolveName(from.GetLanguage()), X, Y, Z));
 		}
